@@ -1,0 +1,112 @@
+{
+  "_doc": "Catalogue des outils de destruction. category pilote le mode d'interaction : throw (glisser-lacher), drop (tap pour lacher), swing (maintenir puis lacher), fire (viser puis tirer), hold (maintenir), field (decor passif, jamais outil principal).",
+  "version": 1,
+  "tools": [
+    {
+      "id": "bowling_ball", "label": "Boule de bowling", "category": "throw",
+      "mass": 7.5, "size": [0.22, 0.22, 0.22], "shape": "sphere",
+      "color": "#9B3FD4", "accent": "#5C1D84",
+      "power": 3.12, "damageMultiplier": 1.0, "restitution": 0.3, "friction": 0.5,
+      "order": 0
+    },
+    {
+      "id": "hammer", "label": "Marteau", "category": "swing",
+      "mass": 22, "size": [0.9, 0.55, 0.55], "shape": "box",
+      "color": "#B9BEC6", "accent": "#6E4A2A",
+      "power": 5.62, "damageMultiplier": 1.15, "restitution": 0.1, "friction": 0.8,
+      "armLength": 1.9,
+      "order": 1
+    },
+    {
+      "id": "police_car", "label": "Voiture de police", "category": "drop",
+      "mass": 120, "size": [2.1, 0.85, 0.95], "shape": "box",
+      "color": "#F2F2F2", "accent": "#14161A",
+      "power": 11.64, "damageMultiplier": 1.0, "restitution": 0.05, "friction": 0.9,
+      "order": 2
+    },
+    {
+      "id": "press", "label": "Presse hydraulique", "category": "drop",
+      "mass": 260, "size": [2.4, 0.7, 1.6], "shape": "box",
+      "color": "#E0A02C", "accent": "#5A5F66",
+      "power": 39.84, "damageMultiplier": 1.05, "restitution": 0.02, "friction": 0.95,
+      "power_driven": true, "order": 3
+    },
+    {
+      "id": "cannon", "label": "Canon", "category": "fire",
+      "mass": 9, "size": [0.2, 0.2, 0.2], "shape": "sphere",
+      "color": "#2E3238", "accent": "#8A9099",
+      "power": 2.84, "damageMultiplier": 1.25, "restitution": 0.2, "friction": 0.5,
+      "muzzleSpeed": 34, "order": 4
+    },
+    {
+      "id": "explosive", "label": "Explosif", "category": "throw",
+      "mass": 4, "size": [0.24, 0.24, 0.24], "shape": "sphere",
+      "color": "#D33B34", "accent": "#2A2A2A",
+      "power": 2.48, "damageMultiplier": 1.0, "restitution": 0.25, "friction": 0.6,
+      "explosive": { "radius": 3.2, "impulse": 340 }, "order": 5
+    },
+    {
+      "id": "saw", "label": "Scie circulaire", "category": "throw",
+      "mass": 6, "size": [0.62, 0.1, 0.62], "shape": "cylinder",
+      "color": "#D9DDE2", "accent": "#8C6B3F",
+      "power": 2.66, "damageMultiplier": 1.6, "restitution": 0.15, "friction": 0.4,
+      "spin": 42, "order": 6
+    },
+    {
+      "id": "anvil", "label": "Enclume", "category": "drop",
+      "mass": 180, "size": [1.1, 0.75, 0.7], "shape": "box",
+      "color": "#41474F", "accent": "#22262B",
+      "power": 13.7, "damageMultiplier": 1.1, "restitution": 0.04, "friction": 0.85,
+      "order": 7
+    },
+    {
+      "id": "piano", "label": "Piano", "category": "drop",
+      "mass": 210, "size": [1.7, 1.35, 1.0], "shape": "box",
+      "color": "#1B1D20", "accent": "#F4F1E8",
+      "power": 17.8, "damageMultiplier": 1.0, "restitution": 0.08, "friction": 0.7,
+      "order": 8
+    },
+    {
+      "id": "road_roller", "label": "Rouleau compresseur", "category": "drop",
+      "mass": 300, "size": [1.3, 1.3, 1.7], "shape": "cylinder",
+      "color": "#F0B429", "accent": "#3A3F45",
+      "power": 3.18, "damageMultiplier": 1.05, "restitution": 0.03, "friction": 1.0,
+      "rollLaunch": true, "order": 9
+    },
+    {
+      "id": "catapult", "label": "Catapulte", "category": "fire",
+      "mass": 30, "size": [0.34, 0.34, 0.34], "shape": "sphere",
+      "color": "#7A5230", "accent": "#3F2A18",
+      "power": 3.61, "damageMultiplier": 1.15, "restitution": 0.2, "friction": 0.7,
+      "muzzleSpeed": 22, "order": 10
+    },
+    {
+      "id": "giant_fan", "label": "Ventilateur géant", "category": "hold",
+      "mass": 0, "size": [1.5, 1.5, 0.6], "shape": "box",
+      "color": "#7FB2E5", "accent": "#3E5A78",
+      "power": 2.04, "damageMultiplier": 0.6, "restitution": 0, "friction": 0,
+      "field": { "type": "wind", "force": 165, "radius": 8 }, "order": 11
+    },
+    {
+      "id": "electric_plate", "label": "Plaque électrique", "category": "hold",
+      "mass": 0, "size": [3.0, 0.16, 2.4], "shape": "box",
+      "color": "#F4D03F", "accent": "#2D3436",
+      "power": 9.54, "damageMultiplier": 1.0, "restitution": 0.5, "friction": 0.3,
+      "field": { "type": "shock", "force": 210, "radius": 2.6, "dps": 190 }, "order": 12
+    },
+    {
+      "id": "laser", "label": "Laser", "category": "hold",
+      "mass": 0, "size": [0.5, 0.5, 0.5], "shape": "box",
+      "color": "#FF3B6B", "accent": "#5A5F66",
+      "power": 7.96, "damageMultiplier": 1.0, "restitution": 0, "friction": 0,
+      "field": { "type": "beam", "force": 130, "radius": 0.55, "dps": 260 }, "order": 13
+    },
+    {
+      "id": "trampoline_wall", "label": "Trampoline et mur", "category": "field",
+      "mass": 0, "size": [2.2, 0.25, 2.2], "shape": "box",
+      "color": "#3FBF7F", "accent": "#B9BEC6",
+      "power": 0.9, "damageMultiplier": 1.0, "restitution": 1.45, "friction": 0.2,
+      "order": 14
+    }
+  ]
+}

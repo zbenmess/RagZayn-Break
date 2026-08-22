@@ -1,0 +1,5 @@
+{
+  "_doc": "Remplacement manuel de n'importe quel niveau. Cle = numero de niveau (string). La valeur remplace partiellement (merge de premier niveau) la definition generee. Exemple :\n  \"7\": { \"damageThreshold\": 900, \"tools\": [{ \"id\": \"piano\", \"position\": [0, 9, 0] }] }",
+  "version": 1,
+  "levels": {}
+}

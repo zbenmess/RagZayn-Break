@@ -1,0 +1,28 @@
+{
+  "name": "ragzayn-break",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Ragdoll physics sandbox - jeu personnel 3D pour iPhone (PWA)",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview --host",
+    "validate-levels": "tsx scripts/validate-levels.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.scripts.json",
+    "calibrate-tools": "tsx scripts/calibrate-tools.ts",
+    "make-icons": "tsx scripts/make-icons.ts",
+    "check-first-levels": "tsx scripts/check-first-levels.ts"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.20.0",
+    "three": "^0.185.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/three": "^0.185.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "_doc": "Apparence et voix du heros joueur. Editable a chaud : modifier ce fichier suffit, aucun rebuild necessaire (vider le cache du service worker ou recharger deux fois).",
+  "version": 1,
+
+  "name": "Zayn",
+  "age": 2,
+  "_doc_age": "Pilote les proportions. <=3 : proportions bambin (grosse tete, membres courts, ventre rond). 4-8 : enfant. >=9 : proportions allongees.",
+
+  "skinTone": "#E8B894",
+  "hairColor": "#4A2E1C",
+  "hairStyle": "short_textured",
+  "_doc_hairStyle": "short_textured | short_flat | curly | buzz | none",
+  "eyeColor": "#3B2415",
+  "eyeShape": "round_large",
+  "_doc_eyeShape": "round_large | round_small | almond",
+  "expression": "big_smile",
+  "_doc_expression": "big_smile | smile | neutral | excited",
+
+  "outfit": {
+    "top": {
+      "type": "tshirt",
+      "_doc_type": "tshirt | longsleeve | hoodie",
+      "color": "#F5F0E6",
+      "sleeve": "short",
+      "_doc_sleeve": "short | long | none",
+      "chestPrint": true,
+      "printColor": "#D94848"
+    },
+    "bottom": {
+      "type": "shorts",
+      "_doc_type": "shorts | pants",
+      "color": "#5B8FD6"
+    },
+    "shoes": {
+      "type": "sneakers",
+      "_doc_type": "sneakers | boots | barefoot",
+      "color": "#FFFFFF"
+    }
+  },
+
+  "accessories": [],
+  "_doc_accessories": "Liste optionnelle : \"cap\", \"glasses\", \"backpack\".",
+
+  "placement": {
+    "_doc": "Position du heros dans la scene (metres). rotationY 2.55 = vue de trois-quarts dos ; il se retourne vers la camera pour la celebration. Il reste toujours hors de la zone d'impact.",
+    "position": [-0.78, 0, 3.1],
+    "rotationY": 2.55,
+    "scale": 1.05
+  },
+
+  "voice": {
+    "_doc": "Voix de victoire (Web Speech API). Si public/audio/bravo-zayn.mp3 existe, il est joue a la place de la synthese.",
+    "enabled": true,
+    "text": "Bravo Zayn !",
+    "lang": "fr-FR",
+    "preferredVoiceNames": ["Amelie", "Amélie", "Audrey", "Aurelie", "Aurélie", "female", "Femme"],
+    "pitch": 1.1,
+    "rate": 0.9,
+    "volume": 1.0,
+    "audioFile": "audio/bravo-zayn.mp3"
+  },
+
+  "ui": {
+    "winTitle": "Bravo Zayn !",
+    "_doc_winTitle": "Texte affiche sur l'ecran Level Complete."
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-08-22T00:57:14.206Z",
+  "range": {
+    "from": 1,
+    "to": 2500
+  },
+  "total": 2500,
+  "passed": 2500,
+  "fixedBySeedVariant": 250,
+  "failed": 0,
+  "meanDamageOverThreshold": 1.19,
+  "durationSeconds": 41,
+  "failures": []
+}
