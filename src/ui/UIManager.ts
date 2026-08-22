@@ -1,6 +1,6 @@
 import type { LevelManager } from '../levels/LevelManager.js';
 import type { SaveManager } from '../systems/SaveManager.js';
-import type { LevelDef, SaveData } from '../types.js';
+import type { Difficulty, LevelDef, SaveData } from '../types.js';
 
 const GEAR_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.6a.5.5 0 0 0 .1-.6l-1.9-3.2a.5.5 0 0 0-.6-.2l-2.4 1a7.6 7.6 0 0 0-1.7-1l-.4-2.5a.5.5 0 0 0-.5-.4h-3.8a.5.5 0 0 0-.5.4l-.4 2.5a7.6 7.6 0 0 0-1.7 1l-2.4-1a.5.5 0 0 0-.6.2L2.5 8.8a.5.5 0 0 0 .1.6L4.6 11a7.8 7.8 0 0 0 0 2l-2 1.6a.5.5 0 0 0-.1.6l1.9 3.2a.5.5 0 0 0 .6.2l2.4-1c.5.4 1.1.8 1.7 1l.4 2.5a.5.5 0 0 0 .5.4h3.8a.5.5 0 0 0 .5-.4l.4-2.5c.6-.2 1.2-.6 1.7-1l2.4 1a.5.5 0 0 0 .6-.2l1.9-3.2a.5.5 0 0 0-.1-.6zM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5z"/></svg>`;
 const RESET_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7.5 6.5 12 11V8a5.5 5.5 0 1 1-5.5 5.5H4A8 8 0 1 0 12 5z"/></svg>`;
@@ -13,6 +13,7 @@ export interface UICallbacks {
   onToggleSound(on: boolean): void;
   onToggleVoice(on: boolean): void;
   onToggleHaptics(on: boolean): void;
+  onSetDifficulty(difficulty: Difficulty): void;
   onResetProgress(): void;
 }
 
@@ -86,6 +87,14 @@ export class UIManager {
           <label class="row">Vibrations
             <span class="switch"><input type="checkbox" id="sw-haptics"><span></span></span>
           </label>
+          <div class="row segmented-row">
+            <span>Difficulté</span>
+            <div class="segmented" id="difficulty">
+              <button data-value="facile">Facile</button>
+              <button data-value="normal">Normal</button>
+              <button data-value="difficile">Difficile</button>
+            </div>
+          </div>
           <div class="row">Niveaux <span class="value">${this.levels.total}</span></div>
           <div class="row">Meilleur niveau atteint <span class="value" id="max-level"></span></div>
           <button class="btn secondary" id="btn-levels" style="margin-top:16px">Choisir un niveau</button>
@@ -159,6 +168,14 @@ export class UIManager {
     bind('sw-sound', (on) => this.cb.onToggleSound(on));
     bind('sw-voice', (on) => this.cb.onToggleVoice(on));
     bind('sw-haptics', (on) => this.cb.onToggleHaptics(on));
+
+    for (const button of this.root.querySelectorAll<HTMLButtonElement>('#difficulty button')) {
+      button.onclick = () => {
+        const value = button.dataset.value as Difficulty;
+        this.markDifficulty(value);
+        this.cb.onSetDifficulty(value);
+      };
+    }
   }
 
   /* --------------------------------------------------------------- HUD */
@@ -218,6 +235,12 @@ export class UIManager {
 
   /* ----------------------------------------------------------- Reglages */
 
+  private markDifficulty(value: Difficulty): void {
+    for (const button of this.root.querySelectorAll<HTMLButtonElement>('#difficulty button')) {
+      button.classList.toggle('active', button.dataset.value === value);
+    }
+  }
+
   private openSettings(): void {
     const s: SaveData['settings'] = this.save.state.settings;
     const q = <T extends HTMLElement>(id: string) => this.root.querySelector<T>(`#${id}`)!;
@@ -225,6 +248,7 @@ export class UIManager {
     q<HTMLInputElement>('sw-voice').checked = s.voice;
     q<HTMLInputElement>('sw-haptics').checked = s.haptics;
     q('max-level').textContent = String(Math.min(this.levels.total, this.save.state.maxLevelReached));
+    this.markDifficulty(s.difficulty);
     this.settingsPanel.classList.remove('hidden');
   }
 

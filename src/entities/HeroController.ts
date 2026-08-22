@@ -27,7 +27,6 @@ export class HeroController {
   private readonly elbowR = new THREE.Group();
   private readonly hipL = new THREE.Group();
   private readonly hipR = new THREE.Group();
-  private readonly handR = new THREE.Object3D();
 
   private state: HeroState = 'idle';
   private time = 0;
@@ -162,10 +161,6 @@ export class HeroController {
       hand.position.y = -armLen * 1.15;
       elbow.add(hand);
 
-      if (side > 0) {
-        this.handR.position.copy(hand.position);
-        elbow.add(this.handR);
-      }
     }
 
     /* --------------------------------------------------------------- Tete */
@@ -332,12 +327,6 @@ export class HeroController {
 
   get currentState(): HeroState {
     return this.state;
-  }
-
-  /** Position monde de la main droite : utilisee pour poser l'objet a lancer. */
-  handWorldPosition(target: THREE.Vector3): THREE.Vector3 {
-    this.handR.getWorldPosition(target);
-    return target;
   }
 
   update(dt: number): void {

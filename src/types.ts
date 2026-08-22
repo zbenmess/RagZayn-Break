@@ -107,7 +107,12 @@ export interface PlacedTool {
 }
 
 export interface ObstacleSpec {
-  kind: 'wall' | 'pillar' | 'platform' | 'trampoline';
+  /**
+   * `low_wall` et `canopy` sont places entre le lanceur et la cible : le mur bas
+   * oblige a lober, l'auvent limite la hauteur du lob. Ensemble ils forment une
+   * fente a franchir. Les autres sont des obstacles de decor autour de la cible.
+   */
+  kind: 'wall' | 'pillar' | 'platform' | 'trampoline' | 'low_wall' | 'canopy';
   position: Vec3;
   size: Vec3;
   restitution: number;
@@ -144,5 +149,23 @@ export interface SaveData {
   currentLevel: number;
   maxLevelReached: number;
   bestDamage: Record<string, number>;
-  settings: { sound: boolean; voice: boolean; haptics: boolean; quality: 'auto' | 'high' | 'low' };
+  settings: {
+    sound: boolean;
+    voice: boolean;
+    haptics: boolean;
+    quality: 'auto' | 'high' | 'low';
+    /** Multiplie le seuil de degats de chaque niveau. */
+    difficulty: Difficulty;
+  };
 }
+
+export type Difficulty = 'facile' | 'normal' | 'difficile';
+
+/** Facteurs appliques au seuil de degats selon le reglage choisi. */
+export const DIFFICULTY_SCALE: Record<Difficulty, number> = {
+  facile: 0.7,
+  normal: 1,
+  difficile: 1.35,
+};
+
+

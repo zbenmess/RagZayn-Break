@@ -98,6 +98,12 @@ export class Ragdoll {
   detachedCount = 0;
   /** Tant que vrai, le mannequin tient sa pose et n'est pas soumis a la gravite. */
   frozen = true;
+  /**
+   * Vrai des qu'un outil a reellement touche ce mannequin. Tant que c'est faux,
+   * sa chute au sol ne rapporte aucun point : faire tomber la cible sans jamais
+   * l'atteindre ne doit pas suffire a terminer un niveau.
+   */
+  struck = false;
 
   constructor(readonly spec: TargetSpec, private readonly physics: PhysicsWorld) {
     const s = spec.scale;
@@ -187,6 +193,11 @@ export class Ragdoll {
   center(): { x: number; y: number; z: number } {
     const t = this.parts.get('torso')!.body.translation();
     return { x: t.x, y: t.y, z: t.z };
+  }
+
+  /** A appeler des qu'un outil touche ce mannequin (choc, explosion ou champ). */
+  markStruck(): void {
+    this.struck = true;
   }
 
   hasCollider(handle: number): boolean {

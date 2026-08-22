@@ -1,6 +1,5 @@
-import * as THREE from 'three';
 import { FIXED_TIMESTEP } from './PhysicsWorld.js';
-import { applyAimOffset, ballisticDirection, normalize, type Vec } from './ballistics.js';
+import { aimShot, normalize, type Shot, type Vec } from './ballistics.js';
 import { Simulation } from './Simulation.js';
 import { SceneView } from '../render/SceneView.js';
 import { Effects, AimGuide } from './Effects.js';
@@ -12,7 +11,7 @@ import { SaveManager } from '../systems/SaveManager.js';
 import { InputController, type AimData } from '../systems/InputController.js';
 import { UIManager } from '../ui/UIManager.js';
 import type { ToolInstance } from '../entities/ToolFactory.js';
-import type { HeroConfig, LevelDef } from '../types.js';
+import { DIFFICULTY_SCALE, type HeroConfig, type LevelDef } from '../types.js';
 
 const HINTS: Record<string, string> = {
   drag: 'Glisse vers le mannequin pour lancer',
@@ -45,7 +44,6 @@ export class Game {
   private heroResetTimer = -1;
   private running = false;
   private holding = false;
-  private readonly handWorld = new THREE.Vector3();
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -70,6 +68,10 @@ export class Game {
       onToggleSound: (on) => { this.audio.setEnabled(on); save.updateSettings({ sound: on }); },
       onToggleVoice: (on) => { this.voice.setEnabled(on); save.updateSettings({ voice: on }); },
       onToggleHaptics: (on) => save.updateSettings({ haptics: on }),
+      onSetDifficulty: (difficulty) => {
+        save.updateSettings({ difficulty });
+        this.loadLevel(this.level.level); // le seuil change : on repart proprement
+      },
       onResetProgress: () => { save.reset(); this.loadLevel(1); },
     }, heroConfig.ui.winTitle);
 
@@ -103,7 +105,7 @@ export class Game {
     this.sim?.dispose();
 
     this.level = this.levels.get(n);
-    this.sim = new Simulation(this.level, this.levels.toolDefs);
+    this.sim = new Simulation(this.level, this.levels.toolDefs, DIFFICULTY_SCALE[this.save.state.settings.difficulty]);
     this.view.build(this.sim);
     this.save.setCurrentLevel(n);
 
@@ -119,7 +121,7 @@ export class Game {
     this.hero.setAim(0);
 
     this.ui.setLevel(this.level);
-    this.ui.setProgress(0, this.level.damageThreshold);
+    this.ui.setProgress(0, this.sim.threshold);
     this.ui.hideWin();
     this.input.setLocked(false);
     this.syncVerb();
@@ -145,8 +147,7 @@ export class Game {
   private placeHeldTool(): void {
     const tool = this.activeTool;
     if (!tool?.body || tool.def.category !== 'throw' || tool.state !== 'ready') return;
-    this.hero.handWorldPosition(this.handWorld);
-    tool.body.setTranslation({ x: this.handWorld.x, y: this.handWorld.y, z: this.handWorld.z }, false);
+    tool.body.setTranslation({ x: HERO_HAND.x, y: HERO_HAND.y, z: HERO_HAND.z }, false);
   }
 
   /* ------------------------------------------------------------- Entrees */
@@ -174,10 +175,15 @@ export class Game {
   }
 
   /** Visee automatique sur le mannequin, corrigee par le glissement du joueur. */
-  private directionFor(tool: ToolInstance, aim: AimData): Vec {
-    const speed = this.speedOf(tool, aim.power);
-    const base = ballisticDirection(this.originOf(tool), this.aimPoint(), speed, this.level.gravity);
-    return applyAimOffset(base, aim.swipe.x, aim.swipe.y);
+  private shotFor(tool: ToolInstance, aim: AimData): Shot {
+    return aimShot(
+      this.originOf(tool),
+      this.aimPoint(),
+      this.speedOf(tool, aim.power),
+      this.level.gravity,
+      aim.swipe.x,
+      aim.swipe.y,
+    );
   }
 
   private onAimUpdate(aim: AimData): void {
@@ -185,8 +191,7 @@ export class Game {
     if (!tool || tool.state !== 'ready') return;
     this.hero.setAim(aim.power);
 
-    const speed = this.speedOf(tool, aim.power);
-    const dir = this.directionFor(tool, aim);
+    const { dir, speed } = this.shotFor(tool, aim);
     this.aimGuide.show(this.originOf(tool), { x: dir.x * speed, y: dir.y * speed, z: dir.z * speed }, this.level.gravity);
   }
 
@@ -195,7 +200,8 @@ export class Game {
     this.aimGuide.hide();
     if (!tool || tool.state !== 'ready') { this.hero.setState('idle'); return; }
 
-    if (this.sim.activate(this.directionFor(tool, aim), aim.power, tool)) {
+    const shot = this.shotFor(tool, aim);
+    if (this.sim.activate(shot.dir, aim.power, tool, shot.speed)) {
       this.hero.setState('act');
       this.heroResetTimer = 0.75;
       this.audio.whoosh();
@@ -247,8 +253,11 @@ export class Game {
     if (!this.running) return;
     requestAnimationFrame(this.frame);
 
-    // Un onglet remis au premier plan ne doit pas rattraper des secondes de simulation.
-    const dt = Math.min(0.05, (now - this.lastTime) / 1000);
+    // Un onglet remis au premier plan ne doit pas rattraper des secondes de
+    // simulation. La borne reste assez large pour qu'un appareil descendu a
+    // 10 images par seconde suive quand meme le temps reel : en dessous, le jeu
+    // passerait au ralenti et un tir valide pourrait echouer.
+    const dt = Math.min(0.1, (now - this.lastTime) / 1000);
     this.lastTime = now;
 
     this.stepSimulation(dt);
@@ -266,15 +275,17 @@ export class Game {
     this.placeHeldTool();
 
     this.accumulator += dt * this.timeScale;
+    // 8 sous-pas couvrent 133 ms, soit plus que la borne de dt ci-dessus : le
+    // temps simule ne peut donc pas prendre de retard, sans risque d'emballement.
     let steps = 0;
-    while (this.accumulator >= FIXED_TIMESTEP && steps < 5) {
+    while (this.accumulator >= FIXED_TIMESTEP && steps < 8) {
       this.accumulator -= FIXED_TIMESTEP;
       steps++;
       const result = this.sim.step();
       this.handleHits(result);
     }
 
-    this.ui.setProgress(this.sim.damage.total, this.level.damageThreshold);
+    this.ui.setProgress(this.sim.damage.total, this.sim.threshold);
 
     if (this.winTimer >= 0) {
       this.winTimer -= dt;
@@ -286,6 +297,11 @@ export class Game {
       this.beginWin();
       return;
     }
+
+    // Une fois l'ecran de victoire affiche, plus rien ne doit toucher au niveau :
+    // sans cette garde, la reprise automatique le rechargeait au bout de quelques
+    // secondes, derriere l'ecran, si le joueur ne se pressait pas d'appuyer.
+    if (this.ui.winVisible) return;
 
     // Tir manque : tout est retombe et il ne reste aucun outil disponible.
     // On ne relance jamais pendant que le joueur maintient son doigt : un champ

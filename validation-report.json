@@ -1,14 +1,270 @@
 {
-  "generatedAt": "2026-08-22T08:08:11.522Z",
+  "generatedAt": "2026-08-22T09:28:50.129Z",
   "range": {
     "from": 1,
     "to": 2500
   },
   "total": 2500,
   "passed": 2500,
-  "fixedBySeedVariant": 269,
+  "fixedBySeedVariant": 1765,
+  "thresholdCapped": 654,
   "failed": 0,
-  "meanDamageOverThreshold": 1.191,
-  "durationSeconds": 66,
-  "failures": []
+  "thresholdScale": 1,
+  "levelsWithTrajectoryObstacle": 429,
+  "levelsRequiringAimCorrection": 797,
+  "meanDamageOverThreshold": 1.644,
+  "durationSeconds": 1357.1,
+  "failures": [],
+  "cappedLevels": [
+    {
+      "level": 50,
+      "best": 18394,
+      "threshold": 18258
+    },
+    {
+      "level": 105,
+      "best": 13550,
+      "threshold": 13234
+    },
+    {
+      "level": 121,
+      "best": 2443,
+      "threshold": 2362
+    },
+    {
+      "level": 160,
+      "best": 8556,
+      "threshold": 7990
+    },
+    {
+      "level": 181,
+      "best": 9150,
+      "threshold": 8258
+    },
+    {
+      "level": 200,
+      "best": 11117,
+      "threshold": 10978
+    },
+    {
+      "level": 220,
+      "best": 7469,
+      "threshold": 9946
+    },
+    {
+      "level": 226,
+      "best": 3471,
+      "threshold": 3430
+    },
+    {
+      "level": 258,
+      "best": 8967,
+      "threshold": 8947
+    },
+    {
+      "level": 263,
+      "best": 6049,
+      "threshold": 10094
+    },
+    {
+      "level": 271,
+      "best": 2500,
+      "threshold": 2461
+    },
+    {
+      "level": 280,
+      "best": 11865,
+      "threshold": 11592
+    },
+    {
+      "level": 281,
+      "best": 1299,
+      "threshold": 1292
+    },
+    {
+      "level": 284,
+      "best": 12430,
+      "threshold": 12032
+    },
+    {
+      "level": 300,
+      "best": 19990,
+      "threshold": 19960
+    },
+    {
+      "level": 317,
+      "best": 11948,
+      "threshold": 11214
+    },
+    {
+      "level": 326,
+      "best": 11678,
+      "threshold": 11135
+    },
+    {
+      "level": 329,
+      "best": 14393,
+      "threshold": 14366
+    },
+    {
+      "level": 331,
+      "best": 10141,
+      "threshold": 8975
+    },
+    {
+      "level": 334,
+      "best": 9618,
+      "threshold": 9390
+    },
+    {
+      "level": 357,
+      "best": 11683,
+      "threshold": 11657
+    },
+    {
+      "level": 362,
+      "best": 10228,
+      "threshold": 10202
+    },
+    {
+      "level": 367,
+      "best": 11984,
+      "threshold": 11784
+    },
+    {
+      "level": 381,
+      "best": 7887,
+      "threshold": 7218
+    },
+    {
+      "level": 382,
+      "best": 10797,
+      "threshold": 10703
+    },
+    {
+      "level": 388,
+      "best": 14623,
+      "threshold": 14379
+    },
+    {
+      "level": 390,
+      "best": 12600,
+      "threshold": 12459
+    },
+    {
+      "level": 413,
+      "best": 3533,
+      "threshold": 3517
+    },
+    {
+      "level": 416,
+      "best": 8889,
+      "threshold": 10737
+    },
+    {
+      "level": 419,
+      "best": 12319,
+      "threshold": 12236
+    },
+    {
+      "level": 421,
+      "best": 2696,
+      "threshold": 2671
+    },
+    {
+      "level": 430,
+      "best": 8155,
+      "threshold": 10744
+    },
+    {
+      "level": 431,
+      "best": 1467,
+      "threshold": 1421
+    },
+    {
+      "level": 434,
+      "best": 13314,
+      "threshold": 13192
+    },
+    {
+      "level": 458,
+      "best": 13076,
+      "threshold": 12873
+    },
+    {
+      "level": 462,
+      "best": 13173,
+      "threshold": 13171
+    },
+    {
+      "level": 463,
+      "best": 12824,
+      "threshold": 12736
+    },
+    {
+      "level": 481,
+      "best": 9961,
+      "threshold": 9483
+    },
+    {
+      "level": 502,
+      "best": 13967,
+      "threshold": 13955
+    },
+    {
+      "level": 507,
+      "best": 12250,
+      "threshold": 11943
+    },
+    {
+      "level": 517,
+      "best": 2298,
+      "threshold": 2289
+    },
+    {
+      "level": 528,
+      "best": 12803,
+      "threshold": 12582
+    },
+    {
+      "level": 531,
+      "best": 8537,
+      "threshold": 8211
+    },
+    {
+      "level": 532,
+      "best": 12622,
+      "threshold": 12409
+    },
+    {
+      "level": 540,
+      "best": 15599,
+      "threshold": 15137
+    },
+    {
+      "level": 543,
+      "best": 11649,
+      "threshold": 11562
+    },
+    {
+      "level": 560,
+      "best": 12921,
+      "threshold": 12622
+    },
+    {
+      "level": 561,
+      "best": 757,
+      "threshold": 728
+    },
+    {
+      "level": 568,
+      "best": 12387,
+      "threshold": 12317
+    },
+    {
+      "level": 571,
+      "best": 2749,
+      "threshold": 2718
+    }
+  ]
 }

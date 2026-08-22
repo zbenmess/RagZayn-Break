@@ -11,8 +11,11 @@ export const DAMAGE_SCALE = 9.5;
 export const DAMAGE_EXPONENT = 0.72;
 /** Prime accordee a chaque membre arrache. */
 export const LIMB_BONUS = 160;
-/** Les chocs contre le sol comptent moins qu'un coup porte par un outil. */
-const GROUND_FACTOR = 0.12;
+/**
+ * Les chocs contre le sol comptent moins qu'un coup porte par un outil, et ne
+ * comptent pas du tout tant que le mannequin n'a pas ete touche.
+ */
+const GROUND_FACTOR = 0.11;
 const OBSTACLE_FACTOR = 0.55;
 
 export interface DamageEvent {
@@ -59,10 +62,11 @@ export class DamageSystem {
       if (tool) {
         factor = tool.def.damageMultiplier;
         toolId = tool.def.id;
+        hit.ragdoll.markStruck();
       } else if (otherHandle === this.groundHandle) {
-        factor = GROUND_FACTOR;
+        factor = hit.ragdoll.struck ? GROUND_FACTOR : 0;
       } else if (this.obstacleColliders.has(otherHandle)) {
-        factor = OBSTACLE_FACTOR;
+        factor = hit.ragdoll.struck ? OBSTACLE_FACTOR : 0;
       } else if (this.isRagdoll(otherHandle)) {
         // Choc entre deux membres : negligeable.
         factor = 0.12;

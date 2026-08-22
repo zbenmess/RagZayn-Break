@@ -130,7 +130,12 @@ export class ToolFactory {
    * Declenche l'outil. `dir` est normalise, `power` dans [0,1].
    * Retourne false si l'outil a deja ete utilise.
    */
-  activate(tool: ToolInstance, dir: { x: number; y: number; z: number }, power: number): boolean {
+  activate(
+    tool: ToolInstance,
+    dir: { x: number; y: number; z: number },
+    power: number,
+    speedOverride?: number,
+  ): boolean {
     if (tool.state !== 'ready') return false;
     const def = tool.def;
 
@@ -144,7 +149,7 @@ export class ToolFactory {
     switch (def.category) {
       case 'throw': {
         body.setBodyType(RAPIER.RigidBodyType.Dynamic, true);
-        const speed = 11 + power * 17;
+        const speed = speedOverride ?? 11 + power * 17;
         body.setLinvel({ x: dir.x * speed, y: dir.y * speed, z: dir.z * speed }, true);
         if (def.spin) body.setAngvel({ x: 0, y: 0, z: def.spin }, true);
         if (def.explosive) tool.fuse = 2.6;
@@ -168,7 +173,7 @@ export class ToolFactory {
       }
       case 'fire': {
         body.setBodyType(RAPIER.RigidBodyType.Dynamic, true);
-        const speed = (def.muzzleSpeed ?? 25) * (0.55 + power * 0.65);
+        const speed = speedOverride ?? (def.muzzleSpeed ?? 25) * (0.55 + power * 0.65);
         body.setLinvel({ x: dir.x * speed, y: dir.y * speed, z: dir.z * speed }, true);
         break;
       }
@@ -236,6 +241,7 @@ export class ToolFactory {
       // Les degats d'un champ valent pour le mannequin entier, au prorata des
       // membres exposes : les compter membre par membre rendait le laser
       // instantane (onze fois le debit annonce).
+      if (touched > 0) ragdoll.markStruck();
       if (field.dps && touched > 0) {
         damage += field.dps * dt * tool.def.damageMultiplier * (touched / ragdoll.parts.size);
       }
@@ -264,6 +270,7 @@ export class ToolFactory {
         part.body.applyImpulse({ x: n.x * j, y: n.y * j + j * 0.35, z: n.z * j }, true);
         const gain = j * 2.4;
         damage += gain;
+        ragdoll.markStruck();
         ragdoll.applyStress(part, j * 0.11);
       }
     }

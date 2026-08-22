@@ -125,6 +125,12 @@ sera toujours identique, sur n'importe quel appareil.
 - **Boss** : tous les 50 niveaux — mannequin renforcé (plus lourd, articulations
   plus résistantes) ou double mannequin.
 - **Combinaisons** : 1 à 3 outils par niveau au‑delà des niveaux d'apprentissage.
+- **Obstacles sur la trajectoire** (à partir du niveau 25) : un mur bas barre la
+  ligne de tir et oblige à lober ; au‑delà du premier palier, un auvent plafonne
+  le lob et ne laisse qu'une fente à franchir. Ces niveaux n'ont qu'un seul outil,
+  sinon un objet largué d'en haut passerait par‑dessus et annulerait l'obstacle.
+- **Réglage de difficulté** (Facile / Normal / Difficile) dans les réglages :
+  il multiplie le seuil de dégâts de chaque niveau par 0,7, 1 ou 1,35.
 
 ### Garantie de jouabilité
 
@@ -196,9 +202,22 @@ tailles ou la physique, puis relancer `validate-levels`.
 | Ventilateur, laser, plaque électrique | **Maintenir** le doigt appuyé |
 
 La visée est **automatique** : un simple appui envoie le projectile droit sur le
-mannequin. Le glissement sert seulement à dévier le tir et à doser la puissance —
-le jeu reste donc jouable par un tout‑petit, tout en laissant de la marge à un
-joueur plus adroit. Une trajectoire en pointillés s'affiche pendant la visée.
+mannequin. Le jeu reste donc jouable par un tout‑petit. Le glissement, lui, dose
+la trajectoire :
+
+- vers le haut, le tir passe progressivement du **tir tendu** à une **cloche** ;
+  la vitesse est recalculée pour que le projectile retombe malgré tout sur la
+  cible. C'est ce qui permet de franchir un mur posé sur la ligne de tir ;
+- latéralement, il écarte le tir ;
+- sa longueur donne la puissance.
+
+Un mur ne se franchit donc qu'en dosant la cloche : trop peu, le projectile
+s'écrase dessus ; à fond, il arrive trop lentement pour faire des dégâts. Une
+trajectoire en pointillés s'affiche pendant la visée pour aider au réglage.
+
+**Faire tomber la cible ne suffit pas** : tant qu'un outil ne l'a pas réellement
+touchée, ses chocs contre le sol ne rapportent aucun point. Un tir arrêté par un
+obstacle ne rapporte donc rien du tout.
 
 Le mannequin possède 11 segments (tête, torse, bassin, bras, avant‑bras, cuisses,
 tibias) reliés par des articulations sphériques et des charnières à butée. Chaque

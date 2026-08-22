@@ -29,7 +29,7 @@ export class Simulation {
   elapsed = 0;
   private held = false;
 
-  constructor(readonly level: LevelDef, toolDefs: Map<string, ToolDef>) {
+  constructor(readonly level: LevelDef, toolDefs: Map<string, ToolDef>, readonly thresholdScale = 1) {
     this.physics = new PhysicsWorld(level.gravity);
 
     const ragdollFactory = new RagdollFactory(this.physics);
@@ -60,14 +60,16 @@ export class Simulation {
         body,
       );
       this.damage.registerObstacle(collider.handle);
+      // Les obstacles de trajectoire sont teintes differemment du decor : le
+      // joueur doit voir d'un coup d'oeil ce qui barre la route de son tir.
+      const color =
+        obstacle.kind === 'trampoline' ? '#3FBF7F'
+        : obstacle.kind === 'low_wall' ? '#E08A5B'
+        : obstacle.kind === 'canopy' ? '#C4703F'
+        : '#C9D3DC';
+
       this.obstacles.push({
-        visual: {
-          shape: 'box',
-          size: [sx, sy, sz],
-          color: obstacle.kind === 'trampoline' ? '#3FBF7F' : '#C9D3DC',
-          accent: '#8FA0AE',
-          role: obstacle.kind,
-        },
+        visual: { shape: 'box', size: [sx, sy, sz], color, accent: '#8FA0AE', role: obstacle.kind },
         position: [x, y, z],
       });
     }
@@ -77,8 +79,13 @@ export class Simulation {
     return this.tools.find((t) => t.placed.primary);
   }
 
+  /** Seuil effectif, une fois le reglage de difficulte applique. */
+  get threshold(): number {
+    return Math.round(this.level.damageThreshold * this.thresholdScale);
+  }
+
   get won(): boolean {
-    return this.damage.total >= this.level.damageThreshold;
+    return this.damage.total >= this.threshold;
   }
 
   setHeld(held: boolean): void {
@@ -86,9 +93,14 @@ export class Simulation {
   }
 
   /** Declenche un outil ; par defaut l'outil principal. */
-  activate(dir: { x: number; y: number; z: number }, power: number, tool = this.primaryTool): boolean {
+  activate(
+    dir: { x: number; y: number; z: number },
+    power: number,
+    tool = this.primaryTool,
+    speedOverride?: number,
+  ): boolean {
     if (!tool) return false;
-    return this.toolFactory.activate(tool, dir, power);
+    return this.toolFactory.activate(tool, dir, power, speedOverride);
   }
 
   /** Declenche tous les outils secondaires encore disponibles (pieges en chaine). */
@@ -98,8 +110,12 @@ export class Simulation {
     }
   }
 
-  /** Rayon de reveil : le mannequin passe en physique libre juste avant l'impact. */
-  private static readonly WAKE_RADIUS = 1.8;
+  /**
+   * Rayon de reveil : le mannequin passe en physique libre juste avant l'impact.
+   * Volontairement court, sinon un projectile arrete par un obstacle le ferait
+   * s'effondrer a distance sans jamais l'avoir touche.
+   */
+  private static readonly WAKE_RADIUS = 1.15;
 
   /** Reveille les mannequins qu'un outil en vol (ou un champ actif) va toucher. */
   private updateWake(): void {
@@ -119,7 +135,7 @@ export class Simulation {
       for (const ragdoll of sleeping) {
         if (!ragdoll.frozen) continue;
         const c = ragdoll.center();
-        if (Math.hypot(p.x - c.x, p.y - c.y, p.z - c.z) < reach + 0.9) ragdoll.wake();
+        if (Math.hypot(p.x - c.x, p.y - c.y, p.z - c.z) < reach + 0.4) ragdoll.wake();
       }
     }
   }

@@ -5,7 +5,14 @@ export interface LevelOverridesFile {
   levels: Record<string, Partial<LevelDef>>;
 }
 export interface LevelFixesFile {
+  /** Numero de niveau -> indice de variante de seed a utiliser. */
   fixes: Record<string, number>;
+  /**
+   * Numero de niveau -> seuil de degats impose. Utilise pour les rares niveaux
+   * qu'aucune variante ne rend finissables : le seuil est ramene a ce que la
+   * simulation atteint reellement.
+   */
+  caps?: Record<string, number>;
 }
 
 /**
@@ -39,8 +46,10 @@ export class LevelManager {
 
     const variant = this.fixes.fixes?.[String(n)] ?? 0;
     const generated = this.generator.generate(n, variant);
+    const cap = this.fixes.caps?.[String(n)];
+    const capped = cap ? { ...generated, damageThreshold: cap } : generated;
     const override = this.overrides.levels?.[String(n)];
-    const def: LevelDef = override ? { ...generated, ...override, level: n } : generated;
+    const def: LevelDef = override ? { ...capped, ...override, level: n } : capped;
 
     this.cache.set(n, def);
     return def;

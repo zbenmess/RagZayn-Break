@@ -15,6 +15,8 @@ const TUTORIAL_STEP = 10;
 const BOSS_STEP = 50;
 /** Taille d'un palier de difficulte. */
 const TIER_SIZE = 100;
+/** Premier niveau pouvant comporter un obstacle sur la trajectoire. */
+export const TRAJECTORY_FROM_LEVEL = 25;
 
 export class LevelGenerator {
   private readonly tools: ToolDef[];
@@ -104,7 +106,14 @@ export class LevelGenerator {
 
     if (featuredField) placed.push(this.place(featuredField, false, targets[0], rng, tierRatio));
 
-    if (!isTutorial) {
+    // Niveau « un seul tir, un obstacle a franchir » : on renonce alors aux pieges
+    // secondaires, sinon un objet largue d'en haut passerait par-dessus le mur et
+    // rendrait l'obstacle sans effet.
+    const isShot = primaryDef.category === 'throw' || primaryDef.category === 'fire';
+    const wantsObstacle =
+      !isTutorial && level >= TRAJECTORY_FROM_LEVEL && isShot && rng.chance(0.44 + tierRatio * 0.4);
+
+    if (!isTutorial && !wantsObstacle) {
       const extraChance = 0.22 + tierRatio * 0.45;
       const pool = rng.shuffle(unlocked.filter((t) => t.id !== primaryDef.id));
       const extras = Math.min(pool.length, (rng.chance(extraChance) ? 1 : 0) + (rng.chance(extraChance * 0.5) ? 1 : 0));
@@ -114,7 +123,9 @@ export class LevelGenerator {
     }
 
     /* ---------------------------------------------------------- Obstacles */
-    const obstacles: ObstacleSpec[] = [];
+    const obstacles: ObstacleSpec[] = wantsObstacle
+      ? this.trajectoryObstacles(placed[0], targets[0], rng, tierRatio)
+      : [];
     if (!isTutorial && rng.chance(0.18 + tierRatio * 0.3)) {
       const kind = rng.pick(['wall', 'pillar', 'platform'] as const);
       const side = rng.chance(0.5) ? -1 : 1;
@@ -156,11 +167,11 @@ export class LevelGenerator {
     // de degats y est deja inclus, il ne doit donc pas etre recompte ici.
     const expected = placed.reduce((sum, p) => {
       const def = this.def(p.id);
-      const weight = p.primary ? 1 : 0.45;
+      const weight = p.primary ? 1 : 0.35;
       return sum + def.power * Math.sqrt(p.massScale) * weight;
     }, 0);
 
-    let difficulty = 0.3 + tierRatio * 0.3;
+    let difficulty = 0.38 + tierRatio * 0.4;
     if (isTutorial) difficulty *= 0.72;
     if (isBoss) difficulty *= 1.25;
     // Les tout premiers niveaux doivent tomber du premier coup, meme pour un tout-petit.
@@ -184,6 +195,56 @@ export class LevelGenerator {
     };
   }
 
+  /**
+   * Obstacles places entre le lanceur et la cible. Ils ne concernent que les tirs
+   * (projectiles et canons) : un objet largue d'en haut passerait au-dessus.
+   * Le mur bas oblige a lober par-dessus ; l'auvent plafonne le lob. Les deux
+   * ensemble laissent une fente qu'il faut viser.
+   */
+  private trajectoryObstacles(
+    launcher: PlacedTool,
+    target: TargetSpec,
+    rng: Rng,
+    tierRatio: number,
+  ): ObstacleSpec[] {
+    const [tx, , tz] = target.position;
+    const aimY = 1.25 * target.scale;
+    const [, oy, oz] = launcher.position;
+
+    const z = tz + rng.range(1.1, 1.9);
+    const x = tx + rng.range(-0.25, 0.25);
+
+    // Hauteur du tir direct au droit de l'obstacle. Le mur depasse cette ligne :
+    // le tir tendu est donc bloque a coup sur, et il faut lober pour passer.
+    const span = oz - tz;
+    const progress = span > 0.1 ? Math.min(1, Math.max(0, (oz - z) / span)) : 0.5;
+    const lineY = oy + (aimY - oy) * progress;
+    const margin = 0.32 + tierRatio * 0.75 + rng.range(0, 0.22);
+    const wallHeight = Math.max(0.6, lineY + margin);
+
+    const out: ObstacleSpec[] = [
+      {
+        kind: 'low_wall',
+        position: [x, wallHeight / 2, z],
+        size: [3.6, wallHeight, 0.22],
+        restitution: 0.25,
+      },
+    ];
+
+    // Au-dela du premier palier, une fente : l'auvent plafonne le lob et il faut
+    // faire passer le projectile dans l'intervalle.
+    if (tierRatio > 0.04 && rng.chance(0.32 + tierRatio * 0.45)) {
+      const slot = 1.45 - tierRatio * 0.5 + rng.range(-0.08, 0.15);
+      out.push({
+        kind: 'canopy',
+        position: [x, wallHeight + slot + 0.14, z],
+        size: [3.6, 0.28, 1.0],
+        restitution: 0.2,
+      });
+    }
+    return out;
+  }
+
   def(id: string): ToolDef {
     const found = this.tools.find((t) => t.id === id);
     if (!found) throw new Error(`Outil inconnu : ${id}`);
@@ -205,7 +266,7 @@ export class LevelGenerator {
     switch (def.category) {
       case 'throw':
         // Lance depuis la main du heros : doit rester aligne sur HERO_HAND (HeroController).
-        base.position = [-0.58, 0.42, 3.05];
+        base.position = [-0.85, 0.24, 2.99];
         break;
       case 'drop':
         base.position = [tx + rng.range(-0.35, 0.35), rng.range(3.4, 4.5) + tierRatio * 1.1, tz + rng.range(-0.25, 0.25)];

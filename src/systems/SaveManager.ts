@@ -7,7 +7,7 @@ const DEFAULTS: SaveData = {
   currentLevel: 1,
   maxLevelReached: 1,
   bestDamage: {},
-  settings: { sound: true, voice: true, haptics: true, quality: 'auto' },
+  settings: { sound: true, voice: true, haptics: true, quality: 'auto', difficulty: 'normal' },
 };
 
 /** Progression locale : aucun compte, aucun reseau, tout reste sur l'iPhone. */
