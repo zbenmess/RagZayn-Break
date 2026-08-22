@@ -215,8 +215,9 @@ inutile de savoir lire pour rejouer.
 Le dépôt contient le workflow `.github/workflows/deploy.yml`.
 
 1. Dans **Settings → Pages** du dépôt, réglez **Source** sur **GitHub Actions**.
-2. Poussez sur la branche `main` (ou lancez le workflow à la main depuis l'onglet
-   **Actions → Deploiement GitHub Pages → Run workflow**).
+2. Poussez sur la branche de développement (elle est la branche par défaut du
+   dépôt) ou sur `main`, ou lancez le workflow à la main depuis l'onglet
+   **Actions → Deploiement GitHub Pages → Run workflow**.
 3. Le jeu est publié sur `https://<votre-compte>.github.io/<nom-du-depot>/`.
 
 Le workflow injecte automatiquement le bon chemin de base

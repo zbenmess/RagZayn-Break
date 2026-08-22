@@ -2,7 +2,11 @@ name: Deploiement GitHub Pages
 
 on:
   push:
-    branches: [main]
+    # `main` pour le jour ou la branche sera fusionnee, et la branche de travail
+    # actuelle, qui est aujourd'hui la branche par defaut du depot.
+    branches:
+      - main
+      - claude/custom-ios-game-child-2rpt17
   workflow_dispatch:
 
 permissions:
