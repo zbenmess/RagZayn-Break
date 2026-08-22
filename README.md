@@ -234,6 +234,14 @@ inutile de savoir lire pour rejouer.
 Le dépôt contient le workflow `.github/workflows/deploy.yml`.
 
 1. Dans **Settings → Pages** du dépôt, réglez **Source** sur **GitHub Actions**.
+
+   > ⚠️ **Ce réglage est indispensable.** S'il reste sur « Deploy from a branch »,
+   > GitHub publie *en plus* la racine du dépôt telle quelle, en concurrence avec
+   > le workflow. Les deux déploiements partent à chaque push et celui qui finit
+   > en dernier gagne : une fois sur deux, le site sert le `index.html` source
+   > (qui référence `/src/main.ts`) au lieu du jeu construit, et la page reste
+   > blanche. En cas de page blanche, c'est ce réglage qu'il faut corriger ; en
+   > attendant, relancer le workflow à la main rétablit le site.
 2. Poussez sur la branche de développement (elle est la branche par défaut du
    dépôt) ou sur `main`, ou lancez le workflow à la main depuis l'onglet
    **Actions → Deploiement GitHub Pages → Run workflow**.
