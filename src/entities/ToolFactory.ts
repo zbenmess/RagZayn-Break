@@ -99,20 +99,27 @@ export class ToolFactory {
 
     if (def.category === 'swing') {
       // Marteau sur pivot : la masse est retenue en l'air jusqu'au declenchement.
+      const arm = def.armLength ?? sx / 2 + 0.6;
+      const angle = placed.rotationZ;
+
+      // Le corps doit etre pose sur le cercle du pivot ET oriente du meme angle.
+      // Sans la rotation, l'articulation nait violee de toute la longueur du bras
+      // et le solveur remet le marteau en place des la premiere image : le coup
+      // partait tout seul, sans que le joueur ait touche l'ecran.
       body.setBodyType(RAPIER.RigidBodyType.Dynamic, true);
       body.setGravityScale(0, true);
+      body.setTranslation({ x: x + Math.cos(angle) * arm, y: y + Math.sin(angle) * arm, z }, true);
+      body.setRotation({ x: 0, y: 0, z: Math.sin(angle / 2), w: Math.cos(angle / 2) }, true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+
       const pivot = this.physics.world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(x, y, z));
-      const arm = def.armLength ?? sx / 2 + 0.6;
       const data = RAPIER.JointData.revolute(
         { x: 0, y: 0, z: 0 },
         { x: -arm, y: 0, z: 0 },
         { x: 0, y: 0, z: 1 },
       );
       instance.joint = this.physics.world.createImpulseJoint(data, pivot, body, true);
-      body.setTranslation(
-        { x: x + Math.cos(placed.rotationZ) * arm, y: y + Math.sin(placed.rotationZ) * arm, z },
-        true,
-      );
       instance.anchor = { position: [x, y, z], kind: 'pivot' };
     }
 

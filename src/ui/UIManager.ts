@@ -166,6 +166,10 @@ export class UIManager {
   setLevel(def: LevelDef): void {
     this.levelLabel.textContent = `Lv ${def.level}`;
     this.levelSub.textContent = def.isBoss ? 'BOSS' : def.isTutorial ? def.label : '';
+    // Le seuil change avec le niveau : sans cette remise a zero, le cache de
+    // setProgress laisserait afficher celui du niveau precedent tant que les
+    // degats restent a zero.
+    this.lastProgress = -1;
   }
 
   private lastProgress = -1;

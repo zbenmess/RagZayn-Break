@@ -217,7 +217,7 @@ export class LevelGenerator {
       case 'swing': {
         // Le pivot est place a une longueur de bras de la cible : la tete du marteau
         // balaie exactement le torse en passant a l'horizontale.
-        const arm = def.armLength ?? 1.9;
+        const arm = def.armLength ?? 1.5;
         base.position = [tx - arm, 1.3 + rng.range(-0.1, 0.2), tz + rng.range(-0.1, 0.1)];
         base.rotationZ = rng.range(0.75, 1.25);
         break;

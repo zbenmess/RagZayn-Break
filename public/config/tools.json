@@ -13,8 +13,8 @@
       "id": "hammer", "label": "Marteau", "category": "swing",
       "mass": 22, "size": [0.9, 0.55, 0.55], "shape": "box",
       "color": "#B9BEC6", "accent": "#6E4A2A",
-      "power": 5.62, "damageMultiplier": 1.15, "restitution": 0.1, "friction": 0.8,
-      "armLength": 1.9,
+      "power": 5.1, "damageMultiplier": 1.15, "restitution": 0.1, "friction": 0.8,
+      "armLength": 1.5,
       "order": 1
     },
     {
