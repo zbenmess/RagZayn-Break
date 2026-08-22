@@ -26,6 +26,14 @@ async function precache() {
   const cache = await caches.open(CACHE);
   await cache.addAll(SHELL.map((url) => new Request(url, { cache: 'reload' })));
 
+  // Enregistrement de la voix : optionnel, son absence ne doit pas faire echouer
+  // toute la mise en cache (cache.addAll est atomique).
+  try {
+    await cache.add(new Request(`${SCOPE}audio/bravo-zayn.mp3`, { cache: 'reload' }));
+  } catch {
+    /* pas d'enregistrement : la synthese vocale prendra le relais */
+  }
+
   try {
     const html = await (await fetch(`${SCOPE}index.html`, { cache: 'reload' })).text();
     const assets = [...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g)]
@@ -68,10 +76,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Les fichiers de configuration (hero.json, tools.json...) sont minuscules et
-  // destines a etre modifies : on privilegie le reseau pour qu'une retouche de
-  // l'apparence de Zayn soit prise en compte, avec repli sur le cache hors ligne.
-  if (new URL(request.url).pathname.includes('/config/')) {
+  // Configuration et enregistrement de la voix sont petits et destines a etre
+  // remplaces : on privilegie le reseau pour qu'une retouche soit prise en
+  // compte, avec repli sur le cache hors ligne.
+  const path = new URL(request.url).pathname;
+  if (path.includes('/config/') || path.includes('/audio/')) {
     event.respondWith(serveFreshFirst(request));
     return;
   }

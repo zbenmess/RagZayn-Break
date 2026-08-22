@@ -79,7 +79,8 @@ retourne vers la caméra pour montrer son sourire).
 
 ## 4. La voix « Bravo Zayn ! »
 
-Par défaut, la phrase est prononcée par la **synthèse vocale de l'iPhone**
+Le jeu joue en priorité l'enregistrement `public/audio/bravo-zayn.mp3` (fourni).
+S'il est absent, la phrase est prononcée par la **synthèse vocale de l'iPhone**
 (Web Speech API), en `fr-FR`, avec une voix féminine si le système en propose une
 (recherche de « Amélie », « Audrey », « Aurélie », « female »… puis repli sur la
 première voix française disponible). Réglages dans `hero.json` :
@@ -97,11 +98,12 @@ première voix française disponible). Réglages dans `hero.json` :
 }
 ```
 
-### Utiliser votre propre voix (recommandé)
+### L'enregistrement fourni
 
-Déposez un enregistrement court dans **`public/audio/bravo-zayn.mp3`**, puis
-rebuildez. Le jeu détecte le fichier au démarrage et le joue **à la place** de la
-synthèse vocale. Voir `public/audio/README.md`.
+**`public/audio/bravo-zayn.mp3`** contient un enregistrement réel de la phrase
+(1,8 s). C'est lui qui est joué, et non la synthèse vocale — celle‑ci ne sert
+plus que de secours si le fichier est retiré. Pour le remplacer par un autre
+enregistrement, voir `public/audio/README.md`.
 
 > Contrainte Safari iOS : le son et la synthèse vocale ne peuvent démarrer
 > qu'après un premier contact du doigt sur l'écran. Le jeu les débloque
