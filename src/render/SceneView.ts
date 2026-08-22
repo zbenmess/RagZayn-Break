@@ -50,6 +50,8 @@ export class SceneView {
   private readonly meshByPart = new Map<RagdollPart, THREE.Object3D>();
   private readonly meshByTool = new Map<ToolInstance, THREE.Object3D>();
   private readonly levelGroup = new THREE.Group();
+  /** Outils a effet continu : faisceau du laser, pales du ventilateur. */
+  private readonly fieldVisuals: { tool: ToolInstance; beam?: THREE.Mesh; blades?: THREE.Object3D }[] = [];
   private readonly sun: THREE.DirectionalLight;
   private shake = 0;
   /** Geometries creees pour les decorations du niveau courant, liberees au changement. */
@@ -235,6 +237,57 @@ export class SceneView {
         group.add(frame);
         break;
       }
+      case 'laser': {
+        const housing = this.deco(new THREE.BoxGeometry(sx * 1.5, sy * 0.9, sz * 1.5));
+        const box = new THREE.Mesh(housing, materialFor(tool.def.accent));
+        box.position.y = sy * 0.55;
+        box.castShadow = true;
+        group.add(box);
+
+        // Faisceau, affiche uniquement pendant que le joueur maintient l'appui.
+        const height = Math.max(1, tool.placed.position[1]);
+        const radius = tool.def.field?.radius ?? 0.5;
+        const beam = new THREE.Mesh(
+          this.deco(new THREE.CylinderGeometry(radius * 0.32, radius * 0.85, height, 14, 1, true)),
+          new THREE.MeshBasicMaterial({
+            color: 0xff5c85,
+            transparent: true,
+            opacity: 0.2,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          }),
+        );
+        beam.position.y = -height / 2;
+        beam.visible = false;
+        group.add(beam);
+
+        const core = new THREE.Mesh(
+          this.deco(new THREE.CylinderGeometry(radius * 0.1, radius * 0.16, height, 8)),
+          new THREE.MeshBasicMaterial({ color: 0xfff0f4, transparent: true, opacity: 0.75, depthWrite: false }),
+        );
+        core.position.y = -height / 2;
+        beam.add(core);
+        core.position.y = 0;
+        this.fieldVisuals.push({ tool, beam });
+        break;
+      }
+      case 'giant_fan': {
+        const ring = new THREE.Mesh(this.deco(new THREE.TorusGeometry(sx * 0.52, 0.07, 8, 20)), materialFor(tool.def.accent));
+        ring.rotation.y = Math.PI / 2;
+        ring.castShadow = true;
+        group.add(ring);
+
+        const blades = new THREE.Group();
+        for (let i = 0; i < 4; i++) {
+          const blade = new THREE.Mesh(this.deco(new THREE.BoxGeometry(0.07, sy * 0.86, 0.16)), materialFor('#E8F1FA'));
+          blade.rotation.x = (i / 4) * Math.PI * 2;
+          blades.add(blade);
+        }
+        blades.rotation.z = Math.PI / 2;
+        group.add(blades);
+        this.fieldVisuals.push({ tool, blades });
+        break;
+      }
       case 'electric_plate': {
         const glow = new THREE.Mesh(this.deco(new THREE.BoxGeometry(sx * 0.92, sy * 0.4, sz * 0.92)), materialFor('#FFF6B0'));
         glow.position.y = sy * 0.5;
@@ -281,7 +334,13 @@ export class SceneView {
   }
 
   /** Recopie les transformations de la physique vers les meshes. */
-  sync(): void {
+  sync(dt = 0, held = false): void {
+    for (const field of this.fieldVisuals) {
+      const active = field.tool.state === 'flying' && held;
+      if (field.beam) field.beam.visible = active;
+      if (field.blades) field.blades.rotation.x += dt * (active ? 26 : 1.4);
+    }
+
     for (const [part, mesh] of this.meshByPart) {
       const t = part.body.translation();
       const r = part.body.rotation();
@@ -330,6 +389,7 @@ export class SceneView {
     // a l'autre ; seules les decorations sont recreees, donc a liberer ici.
     for (const geometry of this.levelGeometries) geometry.dispose();
     this.levelGeometries.length = 0;
+    this.fieldVisuals.length = 0;
     this.meshByPart.clear();
     this.meshByTool.clear();
   }

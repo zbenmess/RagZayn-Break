@@ -44,6 +44,7 @@ export class Game {
   private settleTimer = 0;
   private heroResetTimer = -1;
   private running = false;
+  private holding = false;
   private readonly handWorld = new THREE.Vector3();
 
   constructor(
@@ -112,6 +113,7 @@ export class Game {
     this.settleTimer = 0;
     this.heroResetTimer = -1;
     this.aimGuide.hide();
+    this.holding = false;
     this.hero.setState('idle');
     this.hero.setAim(0);
 
@@ -203,6 +205,7 @@ export class Game {
   private onHoldStart(): void {
     const tool = this.activeTool;
     if (!tool) return;
+    this.holding = true;
     this.sim.setHeld(true);
     if (tool.state === 'ready') {
       const target = this.aimPoint();
@@ -215,6 +218,7 @@ export class Game {
   }
 
   private onHoldEnd(): void {
+    this.holding = false;
     this.sim.setHeld(false);
     this.syncVerb();
   }
@@ -249,7 +253,7 @@ export class Game {
     this.stepSimulation(dt);
     this.hero.update(dt);
     this.effects.update(dt);
-    this.view.sync();
+    this.view.sync(dt, this.holding);
     this.view.render(dt);
   };
 
@@ -326,6 +330,8 @@ export class Game {
   private finishWin(): void {
     this.timeScale = 1;
     this.winTimer = -1;
+    this.holding = false;
+    this.sim.setHeld(false);
     const damage = this.sim.damage.total;
     const best = this.save.bestFor(this.level.level);
     this.save.recordWin(this.level.level, damage);

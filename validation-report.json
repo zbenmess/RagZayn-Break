@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-08-22T00:57:14.206Z",
+  "generatedAt": "2026-08-22T01:15:28.411Z",
   "range": {
     "from": 1,
     "to": 2500
   },
   "total": 2500,
   "passed": 2500,
-  "fixedBySeedVariant": 250,
+  "fixedBySeedVariant": 252,
   "failed": 0,
-  "meanDamageOverThreshold": 1.19,
-  "durationSeconds": 41,
+  "meanDamageOverThreshold": 1.193,
+  "durationSeconds": 40.6,
   "failures": []
 }

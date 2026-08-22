@@ -48,13 +48,14 @@ export class InputController {
     this.verb = verb;
   }
 
-  /** Bloque les entrees pendant les transitions (victoire, chargement). */
+  /**
+   * Bloque les entrees pendant les transitions (victoire, chargement).
+   * Un maintien en cours n'est pas interrompu ici : c'est le jeu qui decide
+   * quand relacher, pour que le faisceau reste visible pendant le ralenti.
+   */
   setLocked(locked: boolean): void {
     this.locked = locked;
-    if (locked && this.pointerId !== null) {
-      this.pointerId = null;
-      if (this.verb === 'hold') this.cb.onHoldEnd();
-    }
+    if (locked) this.pointerId = null;
   }
 
   private reference(): number {

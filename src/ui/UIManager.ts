@@ -215,6 +215,8 @@ export class UIManager {
 
   private openLevels(): void {
     this.setPage(Math.floor((this.save.currentLevel - 1) / PAGE_SIZE));
+    // Les deux panneaux sont plein ecran : on ferme celui des reglages en dessous.
+    this.settingsPanel.classList.add('hidden');
     this.levelsPanel.classList.remove('hidden');
   }
 

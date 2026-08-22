@@ -200,6 +200,7 @@ export class ToolFactory {
     let damage = 0;
 
     for (const ragdoll of ragdolls) {
+      let touched = 0;
       for (const part of ragdoll.parts.values()) {
         const p = part.body.translation();
         let inside = false;
@@ -220,12 +221,16 @@ export class ToolFactory {
         }
 
         if (!inside) continue;
+        touched++;
         part.body.applyImpulse({ x: force.x * dt, y: force.y * dt, z: force.z * dt }, true);
-        if (field.dps) {
-          const gain = field.dps * dt * tool.def.damageMultiplier;
-          damage += gain;
-          part.stress += gain * 0.02;
-        }
+        part.stress += field.force * dt * 0.02;
+      }
+
+      // Les degats d'un champ valent pour le mannequin entier, au prorata des
+      // membres exposes : les compter membre par membre rendait le laser
+      // instantane (onze fois le debit annonce).
+      if (field.dps && touched > 0) {
+        damage += field.dps * dt * tool.def.damageMultiplier * (touched / ragdoll.parts.size);
       }
     }
     return damage;

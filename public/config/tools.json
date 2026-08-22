@@ -84,22 +84,22 @@
       "id": "giant_fan", "label": "Ventilateur géant", "category": "hold",
       "mass": 0, "size": [1.5, 1.5, 0.6], "shape": "box",
       "color": "#7FB2E5", "accent": "#3E5A78",
-      "power": 2.04, "damageMultiplier": 0.6, "restitution": 0, "friction": 0,
+      "power": 2.01, "damageMultiplier": 0.6, "restitution": 0, "friction": 0,
       "field": { "type": "wind", "force": 165, "radius": 8 }, "order": 11
     },
     {
       "id": "electric_plate", "label": "Plaque électrique", "category": "hold",
       "mass": 0, "size": [3.0, 0.16, 2.4], "shape": "box",
       "color": "#F4D03F", "accent": "#2D3436",
-      "power": 9.54, "damageMultiplier": 1.0, "restitution": 0.5, "friction": 0.3,
-      "field": { "type": "shock", "force": 210, "radius": 2.6, "dps": 190 }, "order": 12
+      "power": 7.73, "damageMultiplier": 1.0, "restitution": 0.5, "friction": 0.3,
+      "field": { "type": "shock", "force": 150, "radius": 2.6, "dps": 620 }, "order": 12
     },
     {
       "id": "laser", "label": "Laser", "category": "hold",
       "mass": 0, "size": [0.5, 0.5, 0.5], "shape": "box",
       "color": "#FF3B6B", "accent": "#5A5F66",
-      "power": 7.96, "damageMultiplier": 1.0, "restitution": 0, "friction": 0,
-      "field": { "type": "beam", "force": 130, "radius": 0.55, "dps": 260 }, "order": 13
+      "power": 5.74, "damageMultiplier": 1.0, "restitution": 0, "friction": 0,
+      "field": { "type": "beam", "force": 62, "radius": 0.55, "dps": 900 }, "order": 13
     },
     {
       "id": "trampoline_wall", "label": "Trampoline et mur", "category": "field",

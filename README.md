@@ -141,9 +141,9 @@ Résultat de la dernière exécution (`validation-report.json`) :
 |---|---|
 | Niveaux testés | **2 500** |
 | Finissables | **2 500 (100 %)** |
-| Corrigés par variante de seed | 250 |
+| Corrigés par variante de seed | 252 |
 | Échecs | **0** |
-| Dégâts obtenus / seuil (moyenne) | 1,19 |
+| Dégâts obtenus / seuil (moyenne) | 1,193 |
 | Durée | ~41 s |
 
 Les **niveaux 1 à 20** ont en plus été vérifiés un par un avec le tir le plus
