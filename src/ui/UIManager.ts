@@ -14,6 +14,9 @@ export interface UICallbacks {
   onToggleVoice(on: boolean): void;
   onToggleHaptics(on: boolean): void;
   onSetDifficulty(difficulty: Difficulty): void;
+  onTestVoice(): void;
+  /** Libelle de ce qui sera joue : enregistrement, voix systeme, ou rien. */
+  voiceLabel(): string;
   onResetProgress(): void;
 }
 
@@ -84,6 +87,10 @@ export class UIManager {
           <label class="row">Voix « ${this.winTitleText} »
             <span class="switch"><input type="checkbox" id="sw-voice"><span></span></span>
           </label>
+          <div class="row">
+            <span>Voix utilisée <span class="value" id="voice-name"></span></span>
+            <button class="btn small" id="btn-test-voice">Tester</button>
+          </div>
           <label class="row">Vibrations
             <span class="switch"><input type="checkbox" id="sw-haptics"><span></span></span>
           </label>
@@ -168,6 +175,11 @@ export class UIManager {
     bind('sw-sound', (on) => this.cb.onToggleSound(on));
     bind('sw-voice', (on) => this.cb.onToggleVoice(on));
     bind('sw-haptics', (on) => this.cb.onToggleHaptics(on));
+    q('btn-test-voice').onclick = () => {
+      this.cb.onTestVoice();
+      // La liste des voix n'est parfois peuplee qu'apres la premiere phrase.
+      setTimeout(() => { q('voice-name').textContent = this.cb.voiceLabel(); }, 700);
+    };
 
     for (const button of this.root.querySelectorAll<HTMLButtonElement>('#difficulty button')) {
       button.onclick = () => {
@@ -249,6 +261,7 @@ export class UIManager {
     q<HTMLInputElement>('sw-haptics').checked = s.haptics;
     q('max-level').textContent = String(Math.min(this.levels.total, this.save.state.maxLevelReached));
     this.markDifficulty(s.difficulty);
+    q('voice-name').textContent = this.cb.voiceLabel();
     this.settingsPanel.classList.remove('hidden');
   }
 

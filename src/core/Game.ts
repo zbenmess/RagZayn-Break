@@ -73,6 +73,14 @@ export class Game {
         this.loadLevel(this.level.level); // le seuil change : on repart proprement
       },
       onResetProgress: () => { save.reset(); this.loadLevel(1); },
+      onTestVoice: () => {
+        // Declenche depuis un appui reel : c'est le contexte que Safari iOS
+        // accepte le plus surement pour la synthese vocale.
+        this.audio.unlock();
+        this.voice.unlock();
+        this.voice.celebrate();
+      },
+      voiceLabel: () => this.voice.voiceName,
     }, heroConfig.ui.winTitle);
 
     this.input = new InputController(canvas.parentElement ?? canvas, {

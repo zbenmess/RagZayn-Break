@@ -108,6 +108,23 @@ synthèse vocale. Voir `public/audio/README.md`.
 > automatiquement au premier appui — c'est normal que le tout premier lancement
 > soit silencieux jusqu'à ce que l'enfant touche l'écran.
 
+### Si vous n'entendez pas « Bravo Zayn ! »
+
+Les réglages (icône engrenage) affichent la voix réellement utilisée et un bouton
+**Tester** : il prononce la phrase immédiatement, depuis votre appui. C'est le
+contexte que Safari accepte le plus sûrement, donc le meilleur moyen de savoir où
+se situe le problème.
+
+| Ce que fait le bouton Tester | Ce qu'il faut regarder |
+|---|---|
+| On entend la phrase | Tout va bien ; si elle manque en fin de niveau, signalez-le |
+| On n'entend rien, et aucun bruit d'impact non plus | **Interrupteur silencieux** de l'iPhone (petit bouton sur la tranche) et volume : Safari coupe aussi la synthèse vocale quand le téléphone est en silencieux |
+| Les impacts s'entendent mais pas la phrase | Vérifiez que le bouton « Voix » est activé, et que **Réglages iOS → Accessibilité → Contenu énoncé** dispose d'une voix française installée |
+| « Voix utilisée » indique « indisponible » | La synthèse vocale est absente de ce navigateur : utilisez un enregistrement mp3 (ci‑dessous) |
+
+En pratique, **l'enregistrement mp3 est la solution la plus fiable** : il ne
+dépend d'aucune voix système, et votre propre voix fera bien plus plaisir.
+
 ## 5. Les 2 500 niveaux
 
 Les niveaux ne sont pas stockés un par un : ils sont **générés de façon
