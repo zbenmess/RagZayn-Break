@@ -113,6 +113,7 @@ export class Game {
     this.settleTimer = 0;
     this.heroResetTimer = -1;
     this.aimGuide.hide();
+    this.effects.reset();
     this.holding = false;
     this.hero.setState('idle');
     this.hero.setAim(0);
@@ -287,8 +288,12 @@ export class Game {
     }
 
     // Tir manque : tout est retombe et il ne reste aucun outil disponible.
+    // On ne relance jamais pendant que le joueur maintient son doigt : un champ
+    // de force qui plaque le mannequin au sol suffirait sinon a declencher la
+    // remise a zero alors qu'il est encore en train de jouer.
+    if (this.sim.tools.length === 0) return; // niveau remplace a la main, sans outil
     const noToolsLeft = !this.sim.tools.some((t) => t.state === 'ready');
-    if (noToolsLeft && this.sim.isSettled()) {
+    if (noToolsLeft && !this.holding && this.sim.isSettled()) {
       this.settleTimer += dt;
       if (this.settleTimer > RETRY_DELAY) this.loadLevel(this.level.level);
       else if (this.settleTimer > 0.6) this.ui.showHint('Raté ! On recommence…');

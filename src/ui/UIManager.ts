@@ -137,6 +137,7 @@ export class UIManager {
     q('btn-next-page').onclick = () => this.setPage(this.page + 1);
     q('btn-jump').onclick = () => {
       const input = q<HTMLInputElement>('level-input');
+      if (input.value.trim() === '') return;
       const value = this.levels.clamp(Number(input.value));
       if (Number.isFinite(value)) {
         this.levelsPanel.classList.add('hidden');
@@ -167,10 +168,16 @@ export class UIManager {
     this.levelSub.textContent = def.isBoss ? 'BOSS' : def.isTutorial ? def.label : '';
   }
 
+  private lastProgress = -1;
+
   setProgress(damage: number, threshold: number): void {
+    // Appelee a chaque frame : on n'ecrit dans le DOM que si l'affichage change.
+    const rounded = Math.round(damage);
+    if (rounded === this.lastProgress) return;
+    this.lastProgress = rounded;
     const ratio = Math.min(1, damage / Math.max(1, threshold));
     this.bar.style.width = `${ratio * 100}%`;
-    this.progressLabel.textContent = `${Math.round(damage)} / ${threshold}`;
+    this.progressLabel.textContent = `${rounded} / ${threshold}`;
   }
 
   showHint(text: string): void {
@@ -184,12 +191,16 @@ export class UIManager {
 
   showWin(def: LevelDef, damage: number, limbs: number, best: number): void {
     this.winTitle.textContent = this.winTitleText;
+    const isLast = def.level >= this.levels.total;
+    const next = this.root.querySelector<HTMLElement>('#btn-next')!;
+    const sub = this.root.querySelector<HTMLElement>('#win-sub')!;
+    next.style.display = isLast ? 'none' : '';
+    sub.textContent = isLast ? `Tu as fini les ${this.levels.total} niveaux !` : 'Niveau terminé';
     this.winStats.innerHTML = `
       ${Math.round(damage)} points de dégâts<br>
       ${limbs} membre${limbs > 1 ? 's' : ''} arraché${limbs > 1 ? 's' : ''}<br>
       <span style="opacity:.7">record : ${Math.max(best, Math.round(damage))}</span>
     `;
-    void def;
     this.winOverlay.classList.remove('hidden');
   }
 
@@ -209,7 +220,7 @@ export class UIManager {
     q<HTMLInputElement>('sw-sound').checked = s.sound;
     q<HTMLInputElement>('sw-voice').checked = s.voice;
     q<HTMLInputElement>('sw-haptics').checked = s.haptics;
-    q('max-level').textContent = String(this.save.state.maxLevelReached);
+    q('max-level').textContent = String(Math.min(this.levels.total, this.save.state.maxLevelReached));
     this.settingsPanel.classList.remove('hidden');
   }
 
@@ -226,7 +237,7 @@ export class UIManager {
     const entries = this.levels.page(this.page, PAGE_SIZE);
     this.pageLabel.textContent = `${this.page * PAGE_SIZE + 1} – ${Math.min(this.levels.total, (this.page + 1) * PAGE_SIZE)}`;
 
-    const max = this.save.state.maxLevelReached;
+    const max = Math.min(this.levels.total, this.save.state.maxLevelReached);
     this.levelGrid.innerHTML = '';
     for (const entry of entries) {
       const button = document.createElement('button');

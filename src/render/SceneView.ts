@@ -4,13 +4,36 @@ import type { RagdollPart } from '../entities/RagdollFactory.js';
 import type { ToolInstance } from '../entities/ToolFactory.js';
 import type { VisualDesc } from '../types.js';
 
-/** Geometrie partagee par shape+taille : evite de recreer des buffers a chaque niveau. */
+/**
+ * Geometrie partagee par shape+taille : evite de recreer des buffers a chaque niveau.
+ * L'echelle du mannequin variant d'un niveau a l'autre, chaque niveau introduit de
+ * nouvelles cles : le cache est donc borne et purge entre deux niveaux.
+ */
 const geometryCache = new Map<string, THREE.BufferGeometry>();
+const GEOMETRY_CACHE_MAX = 120;
+
+/** Libere les entrees les plus anciennes. A n'appeler qu'apres avoir vide la scene. */
+function pruneGeometryCache(): void {
+  if (geometryCache.size <= GEOMETRY_CACHE_MAX) return;
+  const excess = geometryCache.size - GEOMETRY_CACHE_MAX;
+  let removed = 0;
+  for (const [key, geometry] of geometryCache) {
+    if (removed >= excess) break;
+    geometry.dispose();
+    geometryCache.delete(key);
+    removed++;
+  }
+}
 
 function geometryFor(desc: VisualDesc): THREE.BufferGeometry {
   const key = `${desc.shape}:${desc.size.map((v) => v.toFixed(3)).join(',')}`;
   const cached = geometryCache.get(key);
-  if (cached) return cached;
+  if (cached) {
+    // Reinsertion : les entrees les plus recemment utilisees restent en fin de Map.
+    geometryCache.delete(key);
+    geometryCache.set(key, cached);
+    return cached;
+  }
 
   const [a, b, c] = desc.size;
   let geo: THREE.BufferGeometry;
@@ -56,6 +79,8 @@ export class SceneView {
   private shake = 0;
   /** Geometries creees pour les decorations du niveau courant, liberees au changement. */
   private readonly levelGeometries: THREE.BufferGeometry[] = [];
+  /** Materiaux propres au niveau (faisceaux, halos) : hors du cache partage. */
+  private readonly levelMaterials: THREE.Material[] = [];
   private cameraBase = new THREE.Vector3(0, 2.7, 11.4);
 
   constructor(canvas: HTMLCanvasElement, quality: 'high' | 'low' = 'high') {
@@ -116,6 +141,7 @@ export class SceneView {
   /** Reconstruit les objets visuels a partir d'une simulation. */
   build(sim: Simulation): void {
     this.clearLevel();
+    pruneGeometryCache();
 
     for (const ragdoll of sim.ragdolls) {
       for (const part of ragdoll.parts.values()) {
@@ -153,6 +179,12 @@ export class SceneView {
   private deco<T extends THREE.BufferGeometry>(geometry: T): T {
     this.levelGeometries.push(geometry);
     return geometry;
+  }
+
+  /** Idem pour un materiau cree a la volee (il n'est pas dans le cache partage). */
+  private ownMaterial<T extends THREE.Material>(material: T): T {
+    this.levelMaterials.push(material);
+    return material;
   }
 
   private makeMesh(desc: VisualDesc): THREE.Mesh {
@@ -249,13 +281,15 @@ export class SceneView {
         const radius = tool.def.field?.radius ?? 0.5;
         const beam = new THREE.Mesh(
           this.deco(new THREE.CylinderGeometry(radius * 0.32, radius * 0.85, height, 14, 1, true)),
-          new THREE.MeshBasicMaterial({
-            color: 0xff5c85,
-            transparent: true,
-            opacity: 0.2,
-            depthWrite: false,
-            side: THREE.DoubleSide,
-          }),
+          this.ownMaterial(
+            new THREE.MeshBasicMaterial({
+              color: 0xff5c85,
+              transparent: true,
+              opacity: 0.2,
+              depthWrite: false,
+              side: THREE.DoubleSide,
+            }),
+          ),
         );
         beam.position.y = -height / 2;
         beam.visible = false;
@@ -263,7 +297,9 @@ export class SceneView {
 
         const core = new THREE.Mesh(
           this.deco(new THREE.CylinderGeometry(radius * 0.1, radius * 0.16, height, 8)),
-          new THREE.MeshBasicMaterial({ color: 0xfff0f4, transparent: true, opacity: 0.75, depthWrite: false }),
+          this.ownMaterial(
+            new THREE.MeshBasicMaterial({ color: 0xfff0f4, transparent: true, opacity: 0.75, depthWrite: false }),
+          ),
         );
         core.position.y = -height / 2;
         beam.add(core);
@@ -389,6 +425,8 @@ export class SceneView {
     // a l'autre ; seules les decorations sont recreees, donc a liberer ici.
     for (const geometry of this.levelGeometries) geometry.dispose();
     this.levelGeometries.length = 0;
+    for (const material of this.levelMaterials) material.dispose();
+    this.levelMaterials.length = 0;
     this.fieldVisuals.length = 0;
     this.meshByPart.clear();
     this.meshByTool.clear();

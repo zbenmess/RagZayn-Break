@@ -40,8 +40,15 @@ export class InputController {
     element.addEventListener('pointermove', this.onMove, { passive: false });
     element.addEventListener('pointerup', this.onUp, { passive: false });
     element.addEventListener('pointercancel', this.onUp, { passive: false });
-    // Empeche le rebond de page et le zoom sur double-tap dans Safari iOS.
-    element.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    // Empeche le rebond de page et le zoom sur double-tap dans Safari iOS,
+    // sauf au-dessus de l'interface pour que les panneaux restent defilables.
+    element.addEventListener(
+      'touchmove',
+      (e) => {
+        if (!this.isUiTarget(e.target)) e.preventDefault();
+      },
+      { passive: false },
+    );
   }
 
   setVerb(verb: InteractionVerb): void {
@@ -79,7 +86,17 @@ export class InputController {
     };
   }
 
+  /**
+   * Vrai lorsque le geste vise un element d'interface (bouton, panneau, ecran de
+   * victoire). Sans ce filtre, toucher l'engrenage declenchait aussi l'outil du
+   * niveau, puisque l'evenement remonte jusqu'au conteneur du jeu.
+   */
+  private isUiTarget(target: EventTarget | null): boolean {
+    return target instanceof Element && !!target.closest('button, input, label, .panel, .overlay');
+  }
+
   private onDown = (e: PointerEvent): void => {
+    if (this.isUiTarget(e.target)) return;
     e.preventDefault();
     if (!this.firstGestureDone) {
       this.firstGestureDone = true;

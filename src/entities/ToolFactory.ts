@@ -62,9 +62,9 @@ export class ToolFactory {
     const [x, y, z] = placed.position;
     const isStatic = def.category === 'field' || (def.category === 'hold' && def.field?.type === 'shock');
 
-    const bodyDesc = (isStatic ? RAPIER.RigidBodyDesc.fixed() : RAPIER.RigidBodyDesc.fixed())
-      .setTranslation(x, y, z)
-      .setCcdEnabled(true);
+    // Tous les outils naissent fixes : ils ne tombent, ne roulent ou ne partent
+    // qu'au declenchement du joueur (activate). Les outils de decor le restent.
+    const bodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(x, y, z).setCcdEnabled(true);
     const body = this.physics.world.createRigidBody(bodyDesc);
 
     const [sx, sy, sz] = def.size;

@@ -46,8 +46,11 @@ partie chargée (service worker + cache complet).
 ## 3. Personnaliser Zayn
 
 Tout l'aspect du héros est décrit dans **`public/config/hero.json`**. Le fichier
-est lu au démarrage : il n'y a rien à recompiler, il suffit de recharger la page
-(en PWA installée, fermez puis rouvrez l'app deux fois pour rafraîchir le cache).
+est lu au démarrage : il n'y a rien à recompiler côté code. En local, un simple
+rechargement suffit. Sur la version déployée, les fichiers de `config/` sont
+servis « réseau d'abord » par le service worker : une modification est donc prise
+en compte au prochain lancement avec du réseau, et la dernière version connue
+reste utilisée hors ligne.
 
 | Champ | Rôle |
 |---|---|
@@ -244,6 +247,7 @@ scripts/
   validate-levels.ts      simulation headless des 2 500 niveaux
   calibrate-tools.ts      mesure la puissance réelle de chaque outil
   check-first-levels.ts   vérifie les niveaux 1 à 20 d'un simple appui
+  audit-levels.ts         contrôle les règles du générateur sur les 2 500 niveaux
   make-icons.ts           génère les PNG des icônes
 ```
 
@@ -261,6 +265,7 @@ dans Node pour la validation.
 | `npm run typecheck` | Vérification TypeScript seule |
 | `npm run validate-levels -- --write` | Valide et corrige les 2 500 niveaux |
 | `npm run check-first-levels` | Vérifie les niveaux 1 à 20 |
+| `npm run audit-levels` | Audit structurel du générateur (règles, répartition, déterminisme) |
 | `npm run calibrate-tools -- --write` | Recalibre la puissance des outils |
 | `npm run make-icons` | Régénère les icônes PWA |
 

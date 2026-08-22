@@ -42,6 +42,14 @@ export class Effects {
     }
   }
 
+  /** Efface les eclats encore en vol : evite qu'ils survivent au changement de niveau. */
+  reset(): void {
+    for (const p of this.pool) {
+      p.life = 0;
+      p.mesh.visible = false;
+    }
+  }
+
   update(dt: number): void {
     for (const p of this.pool) {
       if (p.life <= 0) continue;

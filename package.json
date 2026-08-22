@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.scripts.json",
     "calibrate-tools": "tsx scripts/calibrate-tools.ts",
     "make-icons": "tsx scripts/make-icons.ts",
-    "check-first-levels": "tsx scripts/check-first-levels.ts"
+    "check-first-levels": "tsx scripts/check-first-levels.ts",
+    "audit-levels": "tsx scripts/audit-levels.ts"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.20.0",

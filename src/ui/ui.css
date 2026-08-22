@@ -19,7 +19,9 @@ html, body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: none;
+  /* Pas de `touch-action: none` ici : il empecherait aussi de faire defiler au
+     doigt la liste des niveaux et les reglages. La zone de jeu le declare
+     elle-meme ci-dessous. */
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -29,11 +31,19 @@ html, body {
 
 #app { position: fixed; inset: 0; }
 
-#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
 
 #ui { position: absolute; inset: 0; pointer-events: none; }
 
 #boot {
+  touch-action: none;
   position: absolute;
   inset: 0;
   display: grid;
@@ -197,7 +207,12 @@ html, body {
   margin-bottom: 14px;
 }
 .panel header h2 { margin: 0; font-size: 22px; color: var(--ink-strong); }
-.panel .body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.panel .body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
 
 .row {
   display: flex;

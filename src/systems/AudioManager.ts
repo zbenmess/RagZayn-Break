@@ -34,7 +34,8 @@ export class AudioManager {
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
     if (this.master) this.master.gain.value = enabled ? 0.85 : 0;
-    if (!enabled) this.stopAmbient();
+    if (enabled) this.startAmbient();
+    else this.stopAmbient();
   }
 
   private noise(duration: number, gain: number, filter: number, type: BiquadFilterType = 'bandpass'): void {

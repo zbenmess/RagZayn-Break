@@ -68,8 +68,32 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Les fichiers de configuration (hero.json, tools.json...) sont minuscules et
+  // destines a etre modifies : on privilegie le reseau pour qu'une retouche de
+  // l'apparence de Zayn soit prise en compte, avec repli sur le cache hors ligne.
+  if (new URL(request.url).pathname.includes('/config/')) {
+    event.respondWith(serveFreshFirst(request));
+    return;
+  }
+
   event.respondWith(serveFromCache(request));
 });
+
+/** Reseau d'abord, cache en secours. */
+async function serveFreshFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE);
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request, { ignoreVary: true });
+    if (cached) return cached;
+    return new Response('Configuration indisponible hors ligne', { status: 504, statusText: 'Hors ligne' });
+  }
+}
 
 /**
  * Cache d'abord, reseau ensuite.
