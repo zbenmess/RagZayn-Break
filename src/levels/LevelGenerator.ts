@@ -1,5 +1,6 @@
 import { Rng, levelSeed } from './rng.js';
 import type { LevelDef, ObstacleSpec, PlacedTool, TargetSpec, ToolDef } from '../types.js';
+import { HERO_HAND } from '../core/launch.js';
 
 export const TOTAL_LEVELS = 2500;
 
@@ -265,8 +266,8 @@ export class LevelGenerator {
 
     switch (def.category) {
       case 'throw':
-        // Lance depuis la main du heros : doit rester aligne sur HERO_HAND (HeroController).
-        base.position = [-0.85, 0.24, 2.99];
+        // Lance depuis la main du heros : constante partagee avec le jeu.
+        base.position = [...HERO_HAND];
         break;
       case 'drop':
         base.position = [tx + rng.range(-0.35, 0.35), rng.range(3.4, 4.5) + tierRatio * 1.1, tz + rng.range(-0.25, 0.25)];

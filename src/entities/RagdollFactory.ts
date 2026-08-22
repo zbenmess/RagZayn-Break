@@ -6,6 +6,9 @@ const WOOD = '#E4A853';
 const WOOD_DARK = '#D2963F';
 const JOINT_BROWN = '#8B5A2B';
 
+/** Les chocs d'un mannequin simplement projete a la main comptent a cette part. */
+const HAND_IMPACT_FACTOR = 0.45;
+
 export type PartName =
   | 'pelvis' | 'torso' | 'head'
   | 'upperArmL' | 'upperArmR' | 'forearmL' | 'forearmR'
@@ -104,6 +107,12 @@ export class Ragdoll {
    * l'atteindre ne doit pas suffire a terminer un niveau.
    */
   struck = false;
+  /**
+   * Vrai des que le joueur l'a attrape a la main. Les chocs comptent alors, mais
+   * moins qu'apres un vrai coup : projeter la poupee reste un complement, pas un
+   * raccourci pour terminer le niveau sans se servir des outils.
+   */
+  handled = false;
 
   constructor(readonly spec: TargetSpec, private readonly physics: PhysicsWorld) {
     const s = spec.scale;
@@ -198,6 +207,17 @@ export class Ragdoll {
   /** A appeler des qu'un outil touche ce mannequin (choc, explosion ou champ). */
   markStruck(): void {
     this.struck = true;
+  }
+
+  /** A appeler quand le joueur attrape le mannequin a la main. */
+  markHandled(): void {
+    this.handled = true;
+  }
+
+  /** Part des degats de choc reellement comptee, selon ce qui a mis la cible en jeu. */
+  get impactFactor(): number {
+    if (this.struck) return 1;
+    return this.handled ? HAND_IMPACT_FACTOR : 0;
   }
 
   hasCollider(handle: number): boolean {

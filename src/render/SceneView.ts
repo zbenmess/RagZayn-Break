@@ -77,6 +77,8 @@ export class SceneView {
   private readonly fieldVisuals: { tool: ToolInstance; beam?: THREE.Mesh; blades?: THREE.Object3D }[] = [];
   private readonly sun: THREE.DirectionalLight;
   private shake = 0;
+  private readonly raycaster = new THREE.Raycaster();
+  private readonly pointer = new THREE.Vector2();
   /** Geometries creees pour les decorations du niveau courant, liberees au changement. */
   private readonly levelGeometries: THREE.BufferGeometry[] = [];
   /** Materiaux propres au niveau (faisceaux, halos) : hors du cache partage. */
@@ -393,6 +395,43 @@ export class SceneView {
       group.position.set(t.x, t.y, t.z);
       group.quaternion.set(r.x, r.y, r.z, r.w);
     }
+  }
+
+  /**
+   * Membre du mannequin situe sous le doigt, ou null. Sert a attraper la poupee
+   * pour la projeter : on teste les meshes des membres, pas les outils ni le decor.
+   */
+  pickRagdollPart(clientX: number, clientY: number, width: number, height: number): RagdollPart | null {
+    this.pointer.set((clientX / width) * 2 - 1, -(clientY / height) * 2 + 1);
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+
+    const meshes = [...this.meshByPart.values()];
+    const hits = this.raycaster.intersectObjects(meshes, false);
+    if (hits.length === 0) return null;
+
+    for (const [part, mesh] of this.meshByPart) {
+      if (mesh === hits[0].object) return part;
+    }
+    return null;
+  }
+
+  /** Convertit un point de l'ecran en position monde, dans le plan de profondeur donne. */
+  screenToWorldAtDepth(
+    clientX: number,
+    clientY: number,
+    width: number,
+    height: number,
+    depth: THREE.Vector3,
+    out: THREE.Vector3,
+  ): THREE.Vector3 {
+    this.pointer.set((clientX / width) * 2 - 1, -(clientY / height) * 2 + 1);
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+
+    // Plan perpendiculaire a l'axe de la camera, passant par le point saisi :
+    // le membre suit ainsi le doigt sans s'approcher ni s'eloigner.
+    const normal = this.camera.getWorldDirection(new THREE.Vector3()).negate();
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, depth);
+    return this.raycaster.ray.intersectPlane(plane, out) ?? out.copy(depth);
   }
 
   addShake(amount: number): void {

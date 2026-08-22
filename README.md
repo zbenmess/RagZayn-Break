@@ -148,8 +148,8 @@ sera toujours identique, sur n'importe quel appareil.
   ligne de tir et oblige à lober ; au‑delà du premier palier, un auvent plafonne
   le lob et ne laisse qu'une fente à franchir. Ces niveaux n'ont qu'un seul outil,
   sinon un objet largué d'en haut passerait par‑dessus et annulerait l'obstacle.
-- **Réglage de difficulté** (Facile / Normal / Difficile) dans les réglages :
-  il multiplie le seuil de dégâts de chaque niveau par 0,7, 1 ou 1,35.
+- **Réglage de difficulté** (Facile / Normal / Difficile) dans les réglages : il
+  agit à la fois sur l'aide à la visée et sur le seuil de dégâts (×0,7 / ×1 / ×1,35).
 
 ### Garantie de jouabilité
 
@@ -220,9 +220,38 @@ tailles ou la physique, puis relancer `validate-levels`.
 | Canon, catapulte | **Glisser** pour viser, relâcher pour tirer |
 | Ventilateur, laser, plaque électrique | **Maintenir** le doigt appuyé |
 
-La visée est **automatique** : un simple appui envoie le projectile droit sur le
-mannequin. Le jeu reste donc jouable par un tout‑petit. Le glissement, lui, dose
-la trajectoire :
+### Deux façons de viser
+
+Le réglage de difficulté choisit **qui vise** :
+
+| Réglage | Visée | Seuil de dégâts |
+|---|---|---|
+| **Facile** | automatique : un simple appui touche le mannequin | ×0,7 |
+| **Normal** | à moitié guidée | ×1 |
+| **Difficile** | **entièrement libre** : rien n'est corrigé, on peut rater | ×1,35 |
+
+En visée libre, la **direction** du geste donne l'angle de départ et sa
+**longueur** donne la force — les deux sont indépendantes. Un appui sans geste ne
+tire pas : le jeu rappelle simplement qu'il faut viser, plutôt que de gaspiller le
+tir. La trajectoire en pointillés reste affichée pendant la visée, c'est elle qui
+rend le tir apprenable.
+
+### Attraper le mannequin
+
+Poser le doigt **sur le mannequin** l'attrape, quel que soit l'outil du niveau :
+on peut le soulever, le balancer et le projeter contre un mur ou le sol. C'est
+possible à tout moment, avant comme après le tir.
+
+Ces chocs rapportent des points, mais **jamais assez pour terminer un niveau à eux
+seuls** : ils sont plafonnés à 60 % du seuil. Malmener la poupée à la main prépare
+le terrain ; il faut toujours placer un vrai coup pour finir. Sans ce plafond, un
+mannequin qui roule au sol génère assez de petits chocs pour gagner sans jamais se
+servir des outils.
+
+### Visée assistée (Facile)
+
+Un simple appui envoie le projectile droit sur le mannequin, ce qui garde le jeu
+jouable par un tout‑petit. Le glissement, lui, dose la trajectoire :
 
 - vers le haut, le tir passe progressivement du **tir tendu** à une **cloche** ;
   la vitesse est recalculée pour que le projectile retombe malgré tout sur la

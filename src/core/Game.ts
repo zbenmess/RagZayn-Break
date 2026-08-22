@@ -11,7 +11,14 @@ import { SaveManager } from '../systems/SaveManager.js';
 import { InputController, type AimData } from '../systems/InputController.js';
 import { UIManager } from '../ui/UIManager.js';
 import type { ToolInstance } from '../entities/ToolFactory.js';
-import { DIFFICULTY_SCALE, type HeroConfig, type LevelDef } from '../types.js';
+import type { RagdollPart } from '../entities/RagdollFactory.js';
+import * as THREE from 'three';
+import { AIM_ASSIST, DIFFICULTY_SCALE, type HeroConfig, type LevelDef } from '../types.js';
+
+/** Vitesse maximale que le doigt peut imprimer au mannequin, en m/s. */
+const GRAB_MAX_SPEED = 11;
+/** Raideur de la saisie : plus c'est haut, plus le membre colle au doigt. */
+const GRAB_STIFFNESS = 14;
 
 const HINTS: Record<string, string> = {
   drag: 'Glisse vers le mannequin pour lancer',
@@ -44,6 +51,9 @@ export class Game {
   private heroResetTimer = -1;
   private running = false;
   private holding = false;
+  private grabbed: RagdollPart | null = null;
+  private readonly grabTarget = new THREE.Vector3();
+  private readonly grabDepth = new THREE.Vector3();
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -90,6 +100,9 @@ export class Game {
         this.voice.unlock();
         if (this.save.state.settings.sound) this.audio.startAmbient();
       },
+      onPickTarget: (x, y) => this.startGrab(x, y),
+      onGrabMove: (x, y) => this.moveGrab(x, y),
+      onGrabEnd: () => this.endGrab(),
       onAimStart: () => this.hero.setState('aim'),
       onAimUpdate: (aim) => this.onAimUpdate(aim),
       onRelease: (aim) => this.onRelease(aim),
@@ -125,6 +138,7 @@ export class Game {
     this.aimGuide.hide();
     this.effects.reset();
     this.holding = false;
+    this.grabbed = null;
     this.hero.setState('idle');
     this.hero.setAim(0);
 
@@ -133,7 +147,10 @@ export class Game {
     this.ui.hideWin();
     this.input.setLocked(false);
     this.syncVerb();
-    this.ui.showHint(this.level.isTutorial ? `${this.level.label} — ${HINTS[this.activeVerb]}` : HINTS[this.activeVerb]);
+    const verbHint = this.aimAssist < 0.5 && (this.activeVerb === 'drag' || this.activeVerb === 'aim')
+      ? 'Vise toi-même : la direction du geste donne l\u2019angle, sa longueur la force'
+      : HINTS[this.activeVerb];
+    this.ui.showHint(this.level.isTutorial ? `${this.level.label} — ${verbHint}` : verbHint);
     this.placeHeldTool();
   }
 
@@ -171,7 +188,18 @@ export class Game {
     return { x, y, z };
   }
 
+  /**
+   * Point vise : le torse du mannequin la ou il se trouve maintenant, et non sa
+   * position de depart. Sans cela, apres l'avoir projete a la main ou renverse
+   * d'un premier coup, la visee continuait de pointer le sol vide.
+   */
   private aimPoint(): Vec {
+    const ragdoll = this.sim.ragdolls[0];
+    const torso = ragdoll?.parts.get('torso');
+    if (torso && !ragdoll.frozen) {
+      const t = torso.body.translation();
+      return { x: t.x, y: t.y, z: t.z };
+    }
     const [x, y, z] = this.level.targets[0].position;
     return { x, y: y + 1.25 * this.level.targets[0].scale, z };
   }
@@ -183,6 +211,10 @@ export class Game {
   }
 
   /** Visee automatique sur le mannequin, corrigee par le glissement du joueur. */
+  private get aimAssist(): number {
+    return AIM_ASSIST[this.save.state.settings.difficulty];
+  }
+
   private shotFor(tool: ToolInstance, aim: AimData): Shot {
     return aimShot(
       this.originOf(tool),
@@ -191,6 +223,7 @@ export class Game {
       this.level.gravity,
       aim.swipe.x,
       aim.swipe.y,
+      this.aimAssist,
     );
   }
 
@@ -207,6 +240,14 @@ export class Game {
     const tool = this.activeTool;
     this.aimGuide.hide();
     if (!tool || tool.state !== 'ready') { this.hero.setState('idle'); return; }
+
+    // Sans visee automatique, un appui sans geste ne veut rien dire : plutot que
+    // de gaspiller le tir, on rappelle qu'il faut viser.
+    if (aim.tapped && this.aimAssist < 0.5) {
+      this.hero.setState('idle');
+      this.ui.showHint('Glisse pour viser : la direction donne l\u2019angle, la longueur la force');
+      return;
+    }
 
     const shot = this.shotFor(tool, aim);
     if (this.sim.activate(shot.dir, aim.power, tool, shot.speed)) {
@@ -246,6 +287,56 @@ export class Game {
     this.sim.activate({ x: 0, y: -1, z: 0 }, 0.85, tool);
     this.audio.whoosh();
     this.syncVerb();
+  }
+
+  /* ------------------------------------------------------- Saisie a la main */
+
+  /**
+   * Attrape un membre du mannequin sous le doigt. Le mannequin passe en physique
+   * libre et compte comme touche : le projeter contre un mur ou le sol rapporte
+   * donc des points, au meme titre qu'un coup porte par un outil.
+   */
+  private startGrab(x: number, y: number): boolean {
+    if (this.ui.winVisible) return false;
+    const part = this.view.pickRagdollPart(x, y, window.innerWidth, window.innerHeight);
+    if (!part) return false;
+
+    const ragdoll = this.sim.ragdolls.find((r) => r.parts.get(part.name) === part);
+    ragdoll?.wake();
+    ragdoll?.markHandled();
+
+    this.grabbed = part;
+    const t = part.body.translation();
+    this.grabDepth.set(t.x, t.y, t.z);
+    this.grabTarget.copy(this.grabDepth);
+    this.aimGuide.hide();
+    return true;
+  }
+
+  private moveGrab(x: number, y: number): void {
+    if (!this.grabbed) return;
+    this.view.screenToWorldAtDepth(x, y, window.innerWidth, window.innerHeight, this.grabDepth, this.grabTarget);
+  }
+
+  private endGrab(): void {
+    if (!this.grabbed) return;
+    // On relache sans rien annuler : la vitesse acquise projette le mannequin.
+    this.grabbed.body.setAngularDamping(0.35);
+    this.grabbed = null;
+  }
+
+  /** Tire le membre saisi vers le doigt, a vitesse bornee. */
+  private updateGrab(): void {
+    const part = this.grabbed;
+    if (!part) return;
+    const p = part.body.translation();
+    const vx = (this.grabTarget.x - p.x) * GRAB_STIFFNESS;
+    const vy = (this.grabTarget.y - p.y) * GRAB_STIFFNESS;
+    const vz = (this.grabTarget.z - p.z) * GRAB_STIFFNESS;
+    const speed = Math.hypot(vx, vy, vz);
+    const k = speed > GRAB_MAX_SPEED ? GRAB_MAX_SPEED / speed : 1;
+    part.body.setLinvel({ x: vx * k, y: vy * k, z: vz * k }, true);
+    part.body.setAngularDamping(3);
   }
 
   /* --------------------------------------------------------------- Boucle */
@@ -289,6 +380,7 @@ export class Game {
     while (this.accumulator >= FIXED_TIMESTEP && steps < 8) {
       this.accumulator -= FIXED_TIMESTEP;
       steps++;
+      this.updateGrab();
       const result = this.sim.step();
       this.handleHits(result);
     }
@@ -317,7 +409,7 @@ export class Game {
     // remise a zero alors qu'il est encore en train de jouer.
     if (this.sim.tools.length === 0) return; // niveau remplace a la main, sans outil
     const noToolsLeft = !this.sim.tools.some((t) => t.state === 'ready');
-    if (noToolsLeft && !this.holding && this.sim.isSettled()) {
+    if (noToolsLeft && !this.holding && !this.grabbed && this.sim.isSettled()) {
       this.settleTimer += dt;
       if (this.settleTimer > RETRY_DELAY) this.loadLevel(this.level.level);
       else if (this.settleTimer > 0.6) this.ui.showHint('Raté ! On recommence…');

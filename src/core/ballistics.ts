@@ -64,8 +64,15 @@ export function applyAimOffset(base: Vec, swipeX: number, swipeY: number, spread
   });
 }
 
-/** Angle maximal d'une cloche : au-dela le projectile monte trop et le tir traine. */
+/** Angle maximal d'une cloche assistee : au-dela le projectile monte trop. */
 const MAX_LOB_ANGLE = 1.16; // ~66 degres
+
+/** Bornes de vitesse en visee libre : le joueur dose lui-meme avec la longueur du geste. */
+const FREE_SPEED_MIN = 8;
+const FREE_SPEED_MAX = 30;
+/** Angles autorises en visee libre : un peu vers le bas, presque a la verticale. */
+const FREE_ANGLE_MIN = -0.3;
+const FREE_ANGLE_MAX = 1.72;
 
 export interface Shot {
   dir: Vec;
@@ -73,15 +80,34 @@ export interface Shot {
 }
 
 /**
- * Tir complet produit par le geste du joueur : direction *et* vitesse.
+ * Tir vise entierement par le joueur : la *direction* du geste donne l'angle de
+ * depart, sa *longueur* donne la vitesse. Rien n'est corrige, on peut donc rater.
  *
- * Un glissement vers le haut redresse progressivement le depart, jusqu'a une
- * vraie cloche. La vitesse est alors recalculee pour que le projectile retombe
- * quand meme sur le mannequin : sans cela, sur quelques metres, la solution haute
- * partirait presque a la verticale et mettrait six secondes a redescendre.
- * Le glissement lateral reste un ecart libre, et un geste vers le bas rabat le tir.
+ * Le tir reste dans le plan vertical qui relie le lanceur a la cible : c'est ce
+ * plan que la camera montre de face, si bien qu'un geste vers le haut a l'ecran
+ * fait monter le projectile a l'ecran.
  */
-export function aimShot(
+function freeShot(from: Vec, to: Vec, swipeX: number, swipeY: number, power: number): Shot {
+  const dx = to.x - from.x;
+  const dz = to.z - from.z;
+  const d = Math.hypot(dx, dz) || 1;
+
+  const raw = Math.atan2(swipeY, swipeX);
+  const angle = Math.max(FREE_ANGLE_MIN, Math.min(FREE_ANGLE_MAX, raw));
+  const c = Math.cos(angle);
+
+  return {
+    dir: { x: (dx / d) * c, y: Math.sin(angle), z: (dz / d) * c },
+    speed: FREE_SPEED_MIN + Math.min(1, power) * (FREE_SPEED_MAX - FREE_SPEED_MIN),
+  };
+}
+
+/**
+ * Tir assiste : la visee vise automatiquement le mannequin, et le glissement vers
+ * le haut dose une cloche dont la vitesse est recalculee pour retomber sur la
+ * cible. C'est ce qui permet de franchir un obstacle sans savoir viser.
+ */
+function assistedShot(
   from: Vec,
   to: Vec,
   baseSpeed: number,
@@ -104,15 +130,45 @@ export function aimShot(
   const flatAngle = Math.asin(Math.max(-1, Math.min(1, flat.y)));
   const angle = flatAngle + (MAX_LOB_ANGLE - flatAngle) * lift;
 
-  // Vitesse necessaire pour atteindre la cible sous cet angle.
   const c = Math.cos(angle);
   const reach = d * Math.tan(angle) - h;
   const speed = reach > 0.05 && c > 0.05
     ? Math.min(40, Math.max(4, Math.sqrt((g * d * d) / (2 * c * c * reach))))
     : baseSpeed;
 
-  const hx = dx / d;
-  const hz = dz / d;
-  const dir = { x: hx * c, y: Math.sin(angle), z: hz * c };
+  const dir = { x: (dx / d) * c, y: Math.sin(angle), z: (dz / d) * c };
   return { dir: applyAimOffset(dir, swipeX, 0), speed };
+}
+
+/**
+ * Tir final, melange des deux modes selon l'aide a la visee.
+ *
+ * `assist` vaut 1 pour une visee entierement automatique (un simple appui touche
+ * la cible), 0 pour une visee entierement libre ou le joueur choisit lui-meme
+ * l'angle et la puissance, et une valeur intermediaire pour un guidage partiel.
+ */
+export function aimShot(
+  from: Vec,
+  to: Vec,
+  baseSpeed: number,
+  gravity: number,
+  swipeX: number,
+  swipeY: number,
+  assist = 1,
+): Shot {
+  const assisted = assistedShot(from, to, baseSpeed, gravity, swipeX, swipeY);
+  if (assist >= 0.999) return assisted;
+
+  const free = freeShot(from, to, swipeX, swipeY, Math.hypot(swipeX, swipeY));
+  if (assist <= 0.001) return free;
+
+  const mix = (a: number, b: number) => a + (b - a) * assist;
+  return {
+    dir: normalize({
+      x: mix(free.dir.x, assisted.dir.x),
+      y: mix(free.dir.y, assisted.dir.y),
+      z: mix(free.dir.z, assisted.dir.z),
+    }),
+    speed: mix(free.speed, assisted.speed),
+  };
 }

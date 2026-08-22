@@ -7,10 +7,16 @@ export interface AimData {
   /** Position ecran courante, pour la trajectoire de visee. */
   screen: { x: number; y: number };
   start: { x: number; y: number };
+  /** Vrai lorsque le joueur a simplement touche l'ecran, sans viser. */
+  tapped?: boolean;
 }
 
 export interface InputCallbacks {
   onFirstGesture(): void;
+  /** Vrai si le doigt se pose sur le mannequin : le geste devient une saisie. */
+  onPickTarget(x: number, y: number): boolean;
+  onGrabMove(x: number, y: number): void;
+  onGrabEnd(): void;
   onAimStart(): void;
   onAimUpdate(aim: AimData): void;
   onRelease(aim: AimData): void;
@@ -34,6 +40,7 @@ export class InputController {
   private lastAim: AimData | null = null;
   private firstGestureDone = false;
   private locked = false;
+  private grabbing = false;
 
   constructor(private readonly element: HTMLElement, private readonly cb: InputCallbacks) {
     element.addEventListener('pointerdown', this.onDown, { passive: false });
@@ -62,7 +69,13 @@ export class InputController {
    */
   setLocked(locked: boolean): void {
     this.locked = locked;
-    if (locked) this.pointerId = null;
+    if (locked) {
+      this.pointerId = null;
+      if (this.grabbing) {
+        this.grabbing = false;
+        this.cb.onGrabEnd();
+      }
+    }
   }
 
   private reference(): number {
@@ -109,6 +122,10 @@ export class InputController {
     this.startY = e.clientY;
     this.lastAim = this.computeAim(e.clientX, e.clientY);
 
+    // Le doigt pose sur le mannequin l'attrape, quel que soit l'outil du niveau.
+    this.grabbing = this.cb.onPickTarget(e.clientX, e.clientY);
+    if (this.grabbing) return;
+
     if (this.verb === 'hold') this.cb.onHoldStart();
     else if (this.verb === 'drag' || this.verb === 'aim') this.cb.onAimStart();
   };
@@ -116,6 +133,10 @@ export class InputController {
   private onMove = (e: PointerEvent): void => {
     if (this.pointerId !== e.pointerId || this.locked) return;
     e.preventDefault();
+    if (this.grabbing) {
+      this.cb.onGrabMove(e.clientX, e.clientY);
+      return;
+    }
     if (this.verb !== 'drag' && this.verb !== 'aim') return;
     this.lastAim = this.computeAim(e.clientX, e.clientY);
     this.cb.onAimUpdate(this.lastAim);
@@ -126,6 +147,12 @@ export class InputController {
     this.pointerId = null;
     if (this.locked) return;
     e.preventDefault();
+
+    if (this.grabbing) {
+      this.grabbing = false;
+      this.cb.onGrabEnd();
+      return;
+    }
 
     const aim = this.computeAim(e.clientX, e.clientY);
     const moved = Math.hypot(aim.screen.x - aim.start.x, aim.screen.y - aim.start.y) > this.reference() * DRAG_THRESHOLD;
@@ -139,8 +166,9 @@ export class InputController {
         break;
       case 'drag':
       case 'aim':
-        // Un simple tap tire droit sur la cible avec une puissance moyenne : jouable des 2 ans.
-        this.cb.onRelease(moved ? aim : { ...aim, swipe: { x: 0, y: 0 }, power: 0.8 });
+        // Un simple tap tire droit sur la cible avec une puissance moyenne. En
+        // visee libre le jeu ignore ce tir sans geste : c'est lui qui tranche.
+        this.cb.onRelease(moved ? aim : { ...aim, swipe: { x: 0, y: 0 }, power: 0.8, tapped: true });
         break;
       default:
         this.cb.onTap();

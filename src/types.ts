@@ -168,4 +168,14 @@ export const DIFFICULTY_SCALE: Record<Difficulty, number> = {
   difficile: 1.35,
 };
 
+/**
+ * Aide a la visee selon la difficulte : 1 vise automatiquement le mannequin,
+ * 0 laisse le joueur viser entierement lui-meme (angle et puissance).
+ */
+export const AIM_ASSIST: Record<Difficulty, number> = {
+  facile: 1,
+  normal: 0.4,
+  difficile: 0,
+};
+
 

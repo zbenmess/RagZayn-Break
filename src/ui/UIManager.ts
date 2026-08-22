@@ -102,6 +102,12 @@ export class UIManager {
               <button data-value="difficile">Difficile</button>
             </div>
           </div>
+          <p class="footnote" style="padding:2px 2px 10px">
+            Facile : le tir vise tout seul. Normal : visée à moitié guidée.
+            Difficile : tu vises entièrement, et il faut frapper plus fort.
+            Dans tous les cas, tu peux attraper le mannequin avec le doigt et le
+            projeter contre un mur.
+          </p>
           <div class="row">Niveaux <span class="value">${this.levels.total}</span></div>
           <div class="row">Meilleur niveau atteint <span class="value" id="max-level"></span></div>
           <button class="btn secondary" id="btn-levels" style="margin-top:16px">Choisir un niveau</button>

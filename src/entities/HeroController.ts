@@ -1,11 +1,9 @@
 import * as THREE from 'three';
 import type { HeroConfig } from '../types.js';
+import { HERO_HAND as HERO_HAND_POSITION } from '../core/launch.js';
 
-/**
- * Point de lancer, en coordonnees monde. Le generateur de niveaux place les
- * projectiles a cet endroit : les deux valeurs doivent rester coherentes.
- */
-export const HERO_HAND = new THREE.Vector3(-0.58, 0.42, 3.05);
+/** Position de lancer sous forme de vecteur, pour le rendu. Voir core/launch.ts. */
+export const HERO_HAND = new THREE.Vector3(...HERO_HAND_POSITION);
 
 export type HeroState = 'idle' | 'aim' | 'act' | 'celebrate';
 

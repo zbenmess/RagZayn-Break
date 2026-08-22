@@ -5,6 +5,9 @@ import { ToolFactory, type ToolInstance } from '../entities/ToolFactory.js';
 import { DamageSystem, type DamageEvent } from '../systems/DamageSystem.js';
 import type { LevelDef, ToolDef, VisualDesc } from '../types.js';
 
+/** Part maximale du seuil qu'on peut atteindre en projetant le mannequin a la main. */
+const HAND_DAMAGE_SHARE = 0.6;
+
 export interface ObstacleInstance {
   visual: VisualDesc;
   position: [number, number, number];
@@ -36,6 +39,8 @@ export class Simulation {
     for (const target of level.targets) this.ragdolls.push(ragdollFactory.create(target));
 
     this.damage = new DamageSystem(this.ragdolls, this.physics.groundHandle);
+    // A elle seule, la projection a la main ne peut pas depasser cette part du seuil.
+    this.damage.handDamageCap = level.damageThreshold * thresholdScale * HAND_DAMAGE_SHARE;
 
     const toolFactory = new ToolFactory(this.physics);
     this.toolFactory = toolFactory;
