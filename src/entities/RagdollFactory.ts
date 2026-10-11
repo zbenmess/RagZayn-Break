@@ -2,9 +2,10 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import type { PhysicsWorld } from '../core/PhysicsWorld.js';
 import type { TargetSpec, Vec3, VisualDesc } from '../types.js';
 
-const WOOD = '#E4A853';
-const WOOD_DARK = '#D2963F';
-const JOINT_BROWN = '#8B5A2B';
+/** Costume de la figurine : rouge a motif de toile, bleu uni (cf. SceneView). */
+const RED = '#D3232B';
+const BLUE = '#2346C8';
+const SEAM = '#5A0E12';
 
 /** Les chocs d'un mannequin simplement projete a la main comptent a cette part. */
 const HAND_IMPACT_FACTOR = 0.45;
@@ -36,19 +37,19 @@ interface JointSpec {
   breakImpulse: number;
 }
 
-/** Mannequin d'artiste : pieds au sol (y=0), hauteur ~1.75 m a l'echelle 1. */
+/** Figurine de super-heros : pieds au sol (y=0), hauteur ~1.75 m a l'echelle 1. */
 const PARTS: PartSpec[] = [
-  { name: 'pelvis',    shape: 'box',     size: [0.13, 0.09, 0.10],  center: [0, 0.95, 0],       color: WOOD,      density: 420 },
-  { name: 'torso',     shape: 'box',     size: [0.15, 0.19, 0.11],  center: [0, 1.28, 0],       color: WOOD,      density: 400 },
-  { name: 'head',      shape: 'sphere',  size: [0.145, 0.145, 0.145], center: [0, 1.63, 0],     color: WOOD_DARK, density: 380 },
-  { name: 'upperArmL', shape: 'capsule', size: [0.050, 0.11, 0.050], center: [-0.215, 1.30, 0], color: WOOD,      density: 380 },
-  { name: 'upperArmR', shape: 'capsule', size: [0.050, 0.11, 0.050], center: [ 0.215, 1.30, 0], color: WOOD,      density: 380 },
-  { name: 'forearmL',  shape: 'capsule', size: [0.045, 0.115, 0.045], center: [-0.215, 1.02, 0], color: WOOD,     density: 380 },
-  { name: 'forearmR',  shape: 'capsule', size: [0.045, 0.115, 0.045], center: [ 0.215, 1.02, 0], color: WOOD,     density: 380 },
-  { name: 'thighL',    shape: 'capsule', size: [0.065, 0.16, 0.065], center: [-0.095, 0.66, 0], color: WOOD,      density: 420 },
-  { name: 'thighR',    shape: 'capsule', size: [0.065, 0.16, 0.065], center: [ 0.095, 0.66, 0], color: WOOD,      density: 420 },
-  { name: 'shinL',     shape: 'capsule', size: [0.055, 0.17, 0.055], center: [-0.095, 0.27, 0], color: WOOD,      density: 420 },
-  { name: 'shinR',     shape: 'capsule', size: [0.055, 0.17, 0.055], center: [ 0.095, 0.27, 0], color: WOOD,      density: 420 },
+  { name: 'pelvis',    shape: 'box',     size: [0.13, 0.09, 0.10],  center: [0, 0.95, 0],       color: BLUE,      density: 420 },
+  { name: 'torso',     shape: 'box',     size: [0.15, 0.19, 0.11],  center: [0, 1.28, 0],       color: RED,      density: 400 },
+  { name: 'head',      shape: 'sphere',  size: [0.145, 0.145, 0.145], center: [0, 1.63, 0],     color: RED, density: 380 },
+  { name: 'upperArmL', shape: 'capsule', size: [0.050, 0.11, 0.050], center: [-0.215, 1.30, 0], color: RED,      density: 380 },
+  { name: 'upperArmR', shape: 'capsule', size: [0.050, 0.11, 0.050], center: [ 0.215, 1.30, 0], color: RED,      density: 380 },
+  { name: 'forearmL',  shape: 'capsule', size: [0.045, 0.115, 0.045], center: [-0.215, 1.02, 0], color: RED,     density: 380 },
+  { name: 'forearmR',  shape: 'capsule', size: [0.045, 0.115, 0.045], center: [ 0.215, 1.02, 0], color: RED,     density: 380 },
+  { name: 'thighL',    shape: 'capsule', size: [0.065, 0.16, 0.065], center: [-0.095, 0.66, 0], color: BLUE,      density: 420 },
+  { name: 'thighR',    shape: 'capsule', size: [0.065, 0.16, 0.065], center: [ 0.095, 0.66, 0], color: BLUE,      density: 420 },
+  { name: 'shinL',     shape: 'capsule', size: [0.055, 0.17, 0.055], center: [-0.095, 0.27, 0], color: RED,      density: 420 },
+  { name: 'shinR',     shape: 'capsule', size: [0.055, 0.17, 0.055], center: [ 0.095, 0.27, 0], color: RED,      density: 420 },
 ];
 
 const JOINTS: JointSpec[] = [
@@ -157,7 +158,7 @@ export class Ragdoll {
               ? [p.size[0] * 2 * s, p.size[1] * 2 * s, p.size[2] * 2 * s]
               : [p.size[0] * s, p.size[1] * s, p.size[2] * s],
           color: p.color,
-          accent: JOINT_BROWN,
+          accent: SEAM,
           role: p.name,
         },
         detached: false,

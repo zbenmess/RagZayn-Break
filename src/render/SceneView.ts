@@ -64,6 +64,44 @@ function materialFor(color: string, opts: { flat?: boolean } = {}): THREE.MeshLa
   return mat;
 }
 
+/** Membres rouges de la figurine, recouverts du motif de toile. */
+const WEB_PARTS = new Set(['head', 'torso', 'upperArmL', 'upperArmR', 'forearmL', 'forearmR', 'shinL', 'shinR']);
+const SUIT_RED = '#D3232B';
+const SUIT_BLUE = '#2346C8';
+
+let webMaterial: THREE.MeshLambertMaterial | null = null;
+/** Rouge a quadrillage sombre : sur la tete, les meridiens convergent comme une toile. */
+function suitWebMaterial(): THREE.MeshLambertMaterial {
+  if (webMaterial) return webMaterial;
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = SUIT_RED;
+  ctx.fillRect(0, 0, size, size);
+  ctx.strokeStyle = '#6A0C12';
+  ctx.lineWidth = 2;
+  const step = size / 8;
+  for (let i = 0; i <= 8; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * step, 0);
+    ctx.lineTo(i * step, size);
+    ctx.stroke();
+    // Fils transversaux legerement tendus entre deux rayons, comme une vraie toile.
+    for (let j = 0; j < 8; j++) {
+      ctx.beginPath();
+      ctx.moveTo(j * step, i * step);
+      ctx.quadraticCurveTo((j + 0.5) * step, i * step + step * 0.28, (j + 1) * step, i * step);
+      ctx.stroke();
+    }
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  webMaterial = new THREE.MeshLambertMaterial({ map: texture });
+  return webMaterial;
+}
+
 export class SceneView {
   readonly scene = new THREE.Scene();
   readonly camera: THREE.PerspectiveCamera;
@@ -148,7 +186,8 @@ export class SceneView {
     for (const ragdoll of sim.ragdolls) {
       for (const part of ragdoll.parts.values()) {
         const mesh = this.makeMesh(part.visual);
-        if (part.name === 'head') this.decorateHead(mesh, part.visual);
+        if (WEB_PARTS.has(part.name)) mesh.material = suitWebMaterial();
+        this.decorateSuit(mesh, part.name, part.visual);
         this.levelGroup.add(mesh);
         this.meshByPart.set(part, mesh);
       }
@@ -196,18 +235,75 @@ export class SceneView {
     return mesh;
   }
 
-  /** Les deux yeux ronds caracteristiques du mannequin. */
-  private decorateHead(head: THREE.Mesh, desc: VisualDesc): void {
-    const r = desc.size[0];
-    const white = materialFor('#FFFFFF');
-    const pupil = materialFor('#2A2A2A');
-    for (const side of [-1, 1]) {
-      const eye = new THREE.Mesh(this.deco(new THREE.SphereGeometry(r * 0.27, 12, 10)), white);
-      eye.position.set(side * r * 0.36, r * 0.12, r * 0.86);
-      head.add(eye);
-      const iris = new THREE.Mesh(this.deco(new THREE.SphereGeometry(r * 0.13, 10, 8)), pupil);
-      iris.position.set(side * r * 0.36, r * 0.12, r * 1.02);
-      head.add(iris);
+  /** Yeux, araignee, panneaux bleus, mains et bottes : de quoi reconnaitre le heros. */
+  private decorateSuit(mesh: THREE.Mesh, name: string, desc: VisualDesc): void {
+    const add = (geometry: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z: number) => {
+      const m = new THREE.Mesh(this.deco(geometry), material);
+      m.position.set(x, y, z);
+      mesh.add(m);
+      return m;
+    };
+    const black = materialFor('#151515');
+    const blue = materialFor(SUIT_BLUE);
+    const web = suitWebMaterial();
+
+    switch (name) {
+      case 'head': {
+        const r = desc.size[0];
+        for (const side of [-1, 1]) {
+          // Grands yeux blancs en amande, cercles de noir et inclines vers l'exterieur.
+          const rim = add(new THREE.SphereGeometry(r, 16, 12), black, side * r * 0.4, r * 0.12, r * 0.86);
+          rim.scale.set(0.24, 0.4, 0.14);
+          rim.rotation.set(-0.15, side * 0.45, -side * 0.8);
+          const lens = add(new THREE.SphereGeometry(r, 16, 12), materialFor('#F4F6F8'), side * r * 0.41, r * 0.12, r * 0.9);
+          lens.scale.set(0.18, 0.32, 0.12);
+          lens.rotation.copy(rim.rotation);
+        }
+        break;
+      }
+      case 'torso': {
+        const [w, h, d] = desc.size;
+        // Panneaux bleus sur les flancs, sous les bras.
+        for (const side of [-1, 1]) {
+          add(new THREE.BoxGeometry(w * 0.16, h * 0.62, d * 1.03), blue, side * w * 0.43, -h * 0.17, 0);
+        }
+        // Araignee noire sur la poitrine.
+        const z = d / 2 + 0.004;
+        const cy = h * 0.14;
+        const body = add(new THREE.SphereGeometry(w * 0.07, 10, 8), black, 0, cy - w * 0.02, z);
+        body.scale.set(0.6, 1.25, 0.25);
+        const head = add(new THREE.SphereGeometry(w * 0.035, 8, 6), black, 0, cy + w * 0.085, z);
+        head.scale.z = 0.4;
+        const legLen = w * 0.24;
+        for (const side of [-1, 1]) {
+          for (const angle of [0.75, 0.3, -0.25, -0.7]) {
+            const leg = add(new THREE.BoxGeometry(legLen, w * 0.018, 0.004), black,
+              side * Math.cos(angle) * legLen * 0.5, cy + Math.sin(angle) * legLen * 0.5, z);
+            leg.rotation.z = side * angle;
+          }
+        }
+        break;
+      }
+      case 'pelvis': {
+        const [w, h, d] = desc.size;
+        // Ceinture rouge entre le torse et le short bleu.
+        add(new THREE.BoxGeometry(w * 1.04, h * 0.28, d * 1.04), web, 0, h * 0.36, 0);
+        break;
+      }
+      case 'forearmL':
+      case 'forearmR': {
+        const [a, b] = desc.size;
+        add(new THREE.SphereGeometry(a * 1.15, 12, 10), web, 0, -(b + a * 0.9), 0);
+        break;
+      }
+      case 'shinL':
+      case 'shinR': {
+        const [a, b] = desc.size;
+        // Haut du mollet bleu, botte rouge en dessous.
+        add(new THREE.CapsuleGeometry(a * 1.05, b * 0.9, 4, 12), blue, 0, b * 0.55, 0);
+        add(new THREE.BoxGeometry(a * 2, a * 0.8, a * 3.4), web, 0, -(b + a * 0.3), a * 0.75);
+        break;
+      }
     }
   }
 

@@ -4,7 +4,7 @@ Jeu web 3D de défoulement « ragdoll physics », conçu pour être joué sur iP
 installé depuis Safari comme application sur l'écran d'accueil (PWA).
 
 Le héros du jeu est **Zayn** : un petit personnage low‑poly, visible au premier
-plan, qui lance les objets et déclenche les pièges sur un mannequin de bois
+plan, qui lance les objets et déclenche les pièges sur un mannequin (figurine Spider-Man)
 articulé. À chaque victoire, le jeu affiche et prononce « **Bravo Zayn !** ».
 
 **Usage personnel, hors ligne. Aucun compte, aucune publicité, aucun analytics,
@@ -69,7 +69,7 @@ reste utilisée hors ligne.
 | `ui.winTitle` | Texte affiché sur l'écran de victoire |
 
 Le héros n'a **aucun corps physique** : il n'est jamais touché, jamais projeté,
-jamais endommagé. La seule cible du jeu est le mannequin de bois.
+jamais endommagé. La seule cible du jeu est le mannequin (figurine Spider-Man).
 
 ### Animations
 
